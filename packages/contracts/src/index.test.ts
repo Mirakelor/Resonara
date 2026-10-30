@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   appSettingsSchema,
+  aiPlannerResultSchema,
   candidateSchema,
   createAIRerankerResultSchema,
   discoverEditionSchema,
@@ -177,5 +178,26 @@ describe("local app contracts", () => {
       "same_artist",
     ]);
     expect(candidate.matchedDimensions).toEqual(["artist"]);
+  });
+
+  it("preserves AI planner context summaries and target dimensions", () => {
+    const plan = aiPlannerResultSchema.parse({
+      searchQueries: ["warm rainy electronic"],
+      artistDirections: ["Chilli Beans."],
+      songDirections: ["soft focus"],
+      targetEnergy: 0.5,
+      targetIntent: "relax",
+      rationale: "Warm and calm.",
+      contextSummary: "Cloudy, humid afternoon.",
+      targetDimensions: {
+        energy: 0.45,
+        familiarity: 0.4,
+        genres: ["Electronic"],
+        languages: ["Japanese"],
+      },
+    });
+
+    expect(plan.contextSummary).toBe("Cloudy, humid afternoon.");
+    expect(plan.targetDimensions?.genres).toEqual(["Electronic"]);
   });
 });

@@ -49,6 +49,15 @@ export const aiPlannerResultSchema = z.object({
   targetEnergy: z.number().min(0).max(1),
   targetIntent: listeningIntentSchema,
   rationale: z.string().min(1).max(500),
+  contextSummary: z.string().min(1).max(500).optional(),
+  targetDimensions: z
+    .object({
+      energy: z.number().min(0).max(1),
+      familiarity: z.number().min(0).max(1),
+      genres: z.array(z.string().min(1)).max(20),
+      languages: z.array(z.string().min(1)).max(20),
+    })
+    .optional(),
 });
 
 const aiRerankerItemSchema = z.object({
@@ -80,3 +89,5 @@ export function createAIRerankerResultSchema(candidateTrackIds: string[]) {
 export type Candidate = z.infer<typeof candidateSchema>;
 export type LyricsResponse = z.infer<typeof lyricsResponseSchema>;
 export type AIPlannerResult = z.infer<typeof aiPlannerResultSchema>;
+export type AIRerankItem = z.infer<typeof aiRerankerItemSchema>;
+export type AIRerankResult = { items: AIRerankItem[] };
