@@ -8,6 +8,7 @@ import {
   favoriteRecordSchema,
   feedbackEventSchema,
   recommendationBatchSchema,
+  recommendationItemSchema,
   recommendationRequestSchema,
   trackSchema,
 } from "./index";
@@ -199,5 +200,21 @@ describe("local app contracts", () => {
 
     expect(plan.contextSummary).toBe("Cloudy, humid afternoon.");
     expect(plan.targetDimensions?.genres).toEqual(["Electronic"]);
+  });
+
+  it("preserves merged candidate provenance on recommendation items", () => {
+    const item = recommendationItemSchema.parse({
+      rank: 1,
+      track,
+      reason: {
+        summary: "A verified recommendation.",
+        personalFactor: "Related to a saved track.",
+        contextFactor: "Fits the current weather.",
+      },
+      confidence: 0.9,
+      sources: ["favorite_similarity", "same_artist"],
+    });
+
+    expect(item.sources).toEqual(["favorite_similarity", "same_artist"]);
   });
 });

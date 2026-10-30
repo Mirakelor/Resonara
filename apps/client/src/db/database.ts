@@ -55,6 +55,10 @@ export class ResonaraDatabase extends Dexie {
       providerCache: "key, expiresAt",
       aiDecisions: "++id, kind, createdAt",
     });
+
+    this.version(2).stores({
+      discoverEditions: "editionKey, editionDate, expiresAt",
+    });
   }
 }
 

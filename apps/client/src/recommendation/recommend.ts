@@ -1,0 +1,271 @@
+import {
+  recommendationBatchSchema,
+  type AppSettings,
+  type Candidate,
+  type EnvironmentMode,
+  type FavoriteRecord,
+  type ListeningContext,
+  type ListeningIntent,
+  type RecommendationBatch,
+  type RecommendationFeedback,
+  type TasteProfile,
+} from "@resonara/contracts";
+import { saveRecommendationBatch } from "../db/repositories/recommendations";
+import type { NeteaseProvider } from "../services/netease/client";
+import type { RawTrack } from "../services/netease/mappers";
+import { createRecommendationPlan } from "./aiPlanner";
+import { rerankVerifiedCandidates, type RankedCandidate } from "./aiReranker";
+import { collectCandidates } from "./collectCandidates";
+import { writeRecommendationExplanations } from "./explanationWriter";
+import { buildTasteSeed } from "./tasteSeed";
+import {
+  verifyPlayableCandidates,
+  type VerifiedCandidate,
+} from "./verifyPlayable";
+
+type GenerateInput = {
+  settings: AppSettings;
+  profile: TasteProfile;
+  favorites: FavoriteRecord[];
+  context: ListeningContext;
+  environmentMode: EnvironmentMode;
+  intent: ListeningIntent;
+  recentEvents: RecommendationFeedback[];
+  seedTrackId?: string;
+};
+
+type GenerateOptions = {
+  provider: NeteaseProvider;
+  persist?: (batch: RecommendationBatch) => Promise<void>;
+  now?: () => Date;
+  random?: () => number;
+};
+
+function trackFromRaw(raw: RawTrack, playable: boolean) {
+  if (!raw.coverUrl) return null;
+  return {
+    id: raw.id,
+    provider: "netease" as const,
+    title: raw.title,
+    artist: raw.artist,
+    artistIds: raw.artistIds,
+    album: raw.album,
+    coverUrl: raw.coverUrl,
+    genre: "Unknown",
+    energyLabel: "Unrated",
+    energy: 0.5,
+    durationMs: raw.durationMs,
+    playable,
+  };
+}
+
+async function loadSeedCandidate(
+  seedTrackId: string,
+  provider: NeteaseProvider,
+): Promise<Candidate | null> {
+  const details = await provider.getTrackDetails([seedTrackId]);
+  const raw = details.find(({ id }) => id === seedTrackId);
+  if (!raw) return null;
+  const track = trackFromRaw(raw, false);
+  if (!track) return null;
+  return {
+    track,
+    sources: ["discover_seed"],
+    seedTrackIds: [seedTrackId],
+    matchedDimensions: [],
+    rawScore: null,
+  };
+}
+
+async function loadFallbackCandidates(
+  provider: NeteaseProvider,
+  excludedTrackIds: ReadonlySet<string>,
+): Promise<Candidate[]> {
+  const [recommended, newSongs] = await Promise.all([
+    provider.getPublicRecommendations().catch(() => []),
+    provider.getNewSongs(20).catch(() => []),
+  ]);
+  const raws = [...recommended, ...newSongs].filter(
+    ({ id }) => !excludedTrackIds.has(id),
+  );
+  const ids = [...new Set(raws.map(({ id }) => id))];
+  const details = await provider.getTrackDetails(ids).catch(() => []);
+  return details.flatMap<Candidate>((raw) => {
+    const track = trackFromRaw(raw, false);
+    return track
+      ? [
+          {
+            track,
+            sources: ["recommend_songs"],
+            seedTrackIds: [],
+            matchedDimensions: [],
+            rawScore: null,
+          },
+        ]
+      : [];
+  });
+}
+
+function ensureSeedSelection(
+  items: RankedCandidate[],
+  verified: VerifiedCandidate[],
+  seedTrackId: string | undefined,
+): RankedCandidate[] {
+  if (!seedTrackId || items.some(({ trackId }) => trackId === seedTrackId)) {
+    return items;
+  }
+  const seed = verified.find(({ track }) => track.id === seedTrackId);
+  if (!seed) return items;
+  const rankedSeed: RankedCandidate = {
+    trackId: seed.track.id,
+    artist: seed.track.artist,
+    score: 0.75,
+    reason: "Selected from today's Discover edition.",
+    candidate: seed,
+  };
+  return [rankedSeed, ...items.filter(({ trackId }) => trackId !== seedTrackId)].slice(
+    0,
+    3,
+  );
+}
+
+export async function generateRecommendationBatch(
+  input: GenerateInput,
+  options: GenerateOptions,
+): Promise<RecommendationBatch> {
+  const now = options.now?.() ?? new Date();
+  const sortedFavorites = [...input.favorites].sort((left, right) =>
+    right.updatedAt.localeCompare(left.updatedAt),
+  );
+  const planner = await createRecommendationPlan(
+    {
+      profile: input.profile,
+      favorites: sortedFavorites,
+      context: input.context,
+      intent: input.intent,
+      recentEvents: input.recentEvents,
+    },
+    input.settings,
+  );
+  const seeds = sortedFavorites.map(buildTasteSeed);
+
+  let candidates = await collectCandidates({
+    provider: options.provider,
+    seeds,
+    planner: planner.plan,
+    context: input.context,
+    intent: input.intent,
+    recentFeedback: input.recentEvents,
+  });
+
+  if (input.seedTrackId) {
+    const existing = candidates.some(
+      ({ track }) => track.id === input.seedTrackId,
+    );
+    if (!existing) {
+      const seedCandidate = await loadSeedCandidate(
+        input.seedTrackId,
+        options.provider,
+      );
+      if (seedCandidate) candidates = [seedCandidate, ...candidates];
+    }
+  }
+
+  let verified = await verifyPlayableCandidates(candidates, options.provider, {
+    now: () => now,
+    maxResults: 40,
+    loadMore: (excluded) =>
+      loadFallbackCandidates(options.provider, excluded),
+  });
+  if (verified.length < 3) {
+    const extras = await loadFallbackCandidates(
+      options.provider,
+      new Set(verified.map(({ track }) => track.id)),
+    );
+    verified = await verifyPlayableCandidates(
+      [...candidates, ...extras],
+      options.provider,
+      { now: () => now, maxResults: 40 },
+    );
+  }
+  if (verified.length < 3) {
+    throw new Error("Fewer than three anonymous playable tracks are available.");
+  }
+
+  const dislikedEvents = input.recentEvents.filter(
+    ({ event }) => event === "disliked",
+  );
+  const reranked = await rerankVerifiedCandidates(
+    {
+      plan: planner.plan,
+      candidates: verified,
+      limit: 3,
+      dislikedTrackIds: new Set(
+        dislikedEvents.flatMap(({ trackId }) => (trackId ? [trackId] : [])),
+      ),
+      favoriteArtists: new Set(
+        sortedFavorites.map(({ track }) => track.artist),
+      ),
+    },
+    input.settings,
+  );
+  const selected = ensureSeedSelection(
+    reranked.items,
+    verified,
+    input.seedTrackId,
+  );
+  if (selected.length !== 3) {
+    throw new Error("Exactly three playable recommendations could not be assembled.");
+  }
+
+  const explanationCandidates = selected.map(({ candidate }) => candidate);
+  const explanations = writeRecommendationExplanations({
+    plan: planner.plan,
+    candidates: explanationCandidates,
+    context: input.context,
+  });
+  const featuredIndex = Math.min(
+    selected.length - 1,
+    Math.floor((options.random ?? Math.random)() * selected.length),
+  );
+  const batch = recommendationBatchSchema.parse({
+    id: crypto.randomUUID(),
+    generatedAt: now.toISOString(),
+    intent: input.intent,
+    environmentMode: input.environmentMode,
+    context: input.context,
+    items: selected.map((item, index) => ({
+      rank: index + 1,
+      track: item.candidate.track,
+      reason: explanations[index]!,
+      confidence: item.score,
+      sources: item.candidate.sources,
+      seedTrackId: item.candidate.seedTrackIds[0],
+    })),
+    featuredTrackId: selected[featuredIndex]?.trackId ?? selected[0]!.trackId,
+  });
+
+  await (options.persist ?? saveRecommendationBatch)(batch);
+  return batch;
+}
+
+export async function isRecommendationBatchPlayable(
+  batch: RecommendationBatch,
+  provider: NeteaseProvider,
+  now = new Date(),
+): Promise<boolean> {
+  const candidates: Candidate[] = batch.items.map((item) => ({
+    track: item.track,
+    sources:
+      item.sources ??
+      (item.source ? [item.source] : ["recommend_songs"]),
+    seedTrackIds: item.seedTrackId ? [item.seedTrackId] : [],
+    matchedDimensions: [],
+    rawScore: null,
+  }));
+  const fresh = await verifyPlayableCandidates(candidates, provider, {
+    now: () => now,
+    maxResults: batch.items.length,
+  });
+  return fresh.length === batch.items.length;
+}

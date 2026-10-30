@@ -9,6 +9,74 @@ import { resonaraDb } from "../../db/database";
 import * as favoritesRepository from "../../db/repositories/favorites";
 import { useFavoritesStore } from "./useFavorite";
 
+vi.mock("../recommendations/useRecommendationBatch", async () => {
+  const { recommendationItems } = await import("../../data/mockData");
+  const batch = {
+    id: "75eb915a-a0db-40ab-810c-4386b7608eb5",
+    generatedAt: "2026-10-30T15:00:00+08:00",
+    intent: null,
+    environmentMode: "use_current" as const,
+    context: {
+      localTime: "2026-10-30T15:00:00+08:00",
+      timeZone: "Asia/Shanghai",
+      city: null,
+      weather: null,
+      weatherSource: "unavailable" as const,
+    },
+    items: recommendationItems,
+    featuredTrackId: recommendationItems[0]!.track.id,
+  };
+  return {
+    useRecommendationBatch: () => ({
+      batch,
+      loading: false,
+      error: null,
+      generate: vi.fn(),
+      refresh: vi.fn(),
+    }),
+  };
+});
+
+vi.mock("../discover/useDailyDiscover", async () => {
+  const { discoverEdition } = await import("../../data/mockData");
+  return {
+    useDailyDiscover: () => ({
+      edition: discoverEdition,
+      loading: false,
+      error: null,
+      generate: vi.fn(),
+    }),
+  };
+});
+
+vi.mock("../player/usePlayerController", async () => {
+  const { recommendationItems } = await import("../../data/mockData");
+  return {
+    usePlayerController: () => ({
+      currentTrack: recommendationItems[0]!.track,
+      isPlaying: false,
+      progress: 0,
+      currentTime: 0,
+      duration: 180,
+      lyrics: null,
+      lyricTranslations: null,
+      activeLyricIndex: -1,
+      hasLyrics: false,
+      lyricsOpen: false,
+      muted: false,
+      playTrack: vi.fn(),
+      toggle: vi.fn(),
+      next: vi.fn(),
+      previous: vi.fn(),
+      restart: vi.fn(),
+      seek: vi.fn(),
+      selectTrack: vi.fn(),
+      toggleMute: vi.fn(),
+      toggleLyrics: vi.fn(),
+    }),
+  };
+});
+
 async function resetDatabase() {
   resonaraDb.close();
   await resonaraDb.delete();

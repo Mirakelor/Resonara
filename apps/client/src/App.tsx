@@ -14,14 +14,11 @@ import { TrackCard } from "./components/TrackCard";
 import { SettingsButton } from "./features/settings/SettingsButton";
 import { SettingsPanel } from "./features/settings/SettingsPanel";
 import { useListeningContext } from "./features/context/useListeningContext";
-import { getSettings } from "./db/repositories/settings";
-import { resolveFreshPlaybackUrl } from "./recommendation/verifyPlayable";
-import { createNeteaseProvider } from "./services/netease/client";
-import {
-  discoverEdition,
-  intentMeta,
-  recommendationItems,
-} from "./data/mockData";
+import { useRecommendationBatch } from "./features/recommendations/useRecommendationBatch";
+import { useDailyDiscover } from "./features/discover/useDailyDiscover";
+import { usePlayerController } from "./features/player/usePlayerController";
+import { useFeedback } from "./features/profile/useFeedback";
+import { intentMeta } from "./data/intents";
 import "./styles/app.css";
 
 function scrollToId(id: string) {
@@ -33,207 +30,183 @@ function scrollToId(id: string) {
   });
 }
 
-function nextFeaturedTrackIndex(current: number) {
-  if (recommendationItems.length < 2) return current;
-  const next = Math.floor(Math.random() * recommendationItems.length);
-  return next === current ? (next + 1) % recommendationItems.length : next;
-}
-
 export function App() {
   const [selectedIntent, setSelectedIntent] = useState<ListeningIntent | null>(
     null,
   );
   const [environmentMode, setEnvironmentMode] =
     useState<EnvironmentMode>("use_current");
-  const [pending, setPending] = useState(false);
   const [feedback, setFeedback] = useState<"fit" | "miss" | null>(null);
-  const [featuredTrackIndex, setFeaturedTrackIndex] = useState(() =>
-    Math.floor(Math.random() * recommendationItems.length),
-  );
-  const [currentTrackIndex, setCurrentTrackIndex] = useState(0);
   const [playerOpen, setPlayerOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [showPlayerDock, setShowPlayerDock] = useState(false);
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [progress, setProgress] = useState(0);
   const [notice, setNotice] = useState("");
-  const { context, recommendationContext } = useListeningContext(
+  const {
+    context,
+    recommendationContext,
+    loading: contextLoading,
+    refresh: refreshContext,
+  } = useListeningContext(environmentMode);
+  const {
+    batch,
+    loading: recommendationLoading,
+    error: recommendationError,
+    generate: generateRecommendations,
+    refresh: refreshRecommendations,
+  } = useRecommendationBatch({
+    context: recommendationContext,
+    contextReady: !contextLoading,
     environmentMode,
-  );
-  const audioRef = useRef<HTMLAudioElement | null>(null);
-  const pendingTimerRef = useRef<number | null>(null);
+    selectedIntent,
+  });
+  const {
+    edition: dailyDiscover,
+    loading: discoverLoading,
+    error: discoverError,
+  } = useDailyDiscover(context);
   const noticeTimerRef = useRef<number | null>(null);
+  const pendingSeedSelectionRef = useRef<string | null>(null);
 
   const tracks = useMemo(
-    () => recommendationItems.map((item) => item.track),
-    [],
+    () => batch?.items.map((item) => item.track) ?? [],
+    [batch],
   );
-  const playableTrackIds = useMemo(
-    () =>
-      new Set(
-        tracks.filter((track) => track.playable).map((track) => track.id),
-      ),
-    [tracks],
-  );
-  const currentTrack = tracks[currentTrackIndex] ?? tracks[0]!;
-
   const showNotice = useCallback((message: string) => {
     setNotice(message);
     if (noticeTimerRef.current) window.clearTimeout(noticeTimerRef.current);
     noticeTimerRef.current = window.setTimeout(() => setNotice(""), 3200);
   }, []);
 
+  const feedbackTracking = useFeedback(context);
+  const handlePlaybackStarted = useCallback(
+    (track: Track) => {
+      void feedbackTracking.record({ event: "play_started", track });
+    },
+    [feedbackTracking],
+  );
+  const handlePlaybackCompleted = useCallback(
+    (track: Track) => {
+      void feedbackTracking.record({ event: "play_completed", track });
+    },
+    [feedbackTracking],
+  );
+  const player = usePlayerController({
+    queue: tracks,
+    onNotice: showNotice,
+    onPlaybackStarted: handlePlaybackStarted,
+    onPlaybackCompleted: handlePlaybackCompleted,
+  });
+  const currentTrack = player.currentTrack;
+
+  useEffect(() => {
+    if (!batch) return;
+    const requestedSeed = pendingSeedSelectionRef.current;
+    const desiredTrackId =
+      (requestedSeed &&
+        batch.items.some(({ track }) => track.id === requestedSeed)
+        ? requestedSeed
+        : null) ?? batch.featuredTrackId;
+    pendingSeedSelectionRef.current = null;
+    player.selectTrack(desiredTrackId);
+  }, [batch, player.selectTrack]);
+
   const playTrack = useCallback(
     async (track: Track) => {
-      const index = tracks.findIndex((candidate) => candidate.id === track.id);
-      if (index >= 0) setCurrentTrackIndex(index);
       setShowPlayerDock(true);
       setPlayerOpen(true);
-
-      if (!track.playable) {
-        setIsPlaying(false);
-        showNotice("This track is not available for playback right now.");
-        return;
-      }
-
-      const audio = audioRef.current;
-      if (!audio) return;
-
-      try {
-        const settings = await getSettings();
-        const playback = await resolveFreshPlaybackUrl(
-          track.id,
-          createNeteaseProvider(settings),
-        );
-        if (!playback) {
-          setIsPlaying(false);
-          showNotice(
-            "This track has no anonymous playback URL right now.",
-          );
-          return;
-        }
-
-        audio.src = playback.url;
-        audio.load();
-        try {
-          await audio.play();
-          setIsPlaying(true);
-        } catch {
-          setIsPlaying(false);
-          showNotice("Playback was blocked. Press play again to continue.");
-        }
-      } catch (error) {
-        setIsPlaying(false);
-        showNotice(
-          error instanceof Error
-            ? error.message
-            : "The playback URL could not be verified.",
-        );
-      }
+      await player.playTrack(track);
     },
-    [showNotice, tracks],
+    [player],
   );
 
-  const togglePlayback = useCallback(async () => {
-    const audio = audioRef.current;
-    if (!audio) return;
-
-    if (!currentTrack.playable) {
-      showNotice("This track is not available for playback right now.");
-      return;
+  const skipNext = useCallback(() => {
+    if (player.currentTrack && player.currentTime < 30) {
+      void feedbackTracking.record({
+        event: "skipped_early",
+        track: player.currentTrack,
+        positionMs: Math.round(player.currentTime * 1_000),
+      });
     }
-
-    if (!audio.src) {
-      await playTrack(currentTrack);
-      return;
-    }
-    if (audio.paused) {
-      void audio.play().then(
-        () => setIsPlaying(true),
-        () => showNotice("Playback could not start. Please try again."),
-      );
-    } else {
-      audio.pause();
-      setIsPlaying(false);
-    }
-  }, [currentTrack, playTrack, showNotice]);
-
-  const goNext = useCallback(() => {
-    const nextIndex = (currentTrackIndex + 1) % tracks.length;
-    playTrack(tracks[nextIndex]!);
-  }, [currentTrackIndex, playTrack, tracks]);
-
-  const goPrevious = useCallback(() => {
-    const nextIndex =
-      (currentTrackIndex - 1 + tracks.length) % tracks.length;
-    playTrack(tracks[nextIndex]!);
-  }, [currentTrackIndex, playTrack, tracks]);
-
-  const restartTrack = useCallback(() => {
-    const audio = audioRef.current;
-    if (!audio) return;
-    audio.currentTime = 0;
-    setProgress(0);
-    if (!currentTrack.playable) {
-      showNotice("This track is not available for playback right now.");
-    }
-  }, [currentTrack.playable, showNotice]);
+    void player.next();
+  }, [feedbackTracking, player]);
 
   const selectIntent = useCallback(
     (intent: ListeningIntent) => {
       setSelectedIntent(intent);
       setFeedback(null);
-      setPending(true);
-      if (pendingTimerRef.current) window.clearTimeout(pendingTimerRef.current);
-      pendingTimerRef.current = window.setTimeout(() => {
-        setPending(false);
-        setFeaturedTrackIndex(nextFeaturedTrackIndex);
-        scrollToId("recommendations");
-      }, 650);
+      scrollToId("recommendations");
+      void generateRecommendations({
+        intent,
+        environmentMode,
+        useCache: false,
+      });
     },
-    [],
+    [environmentMode, generateRecommendations],
   );
 
   const changeEnvironment = useCallback(
     (mode: EnvironmentMode) => {
       setEnvironmentMode(mode);
-      if (selectedIntent) {
-        setPending(true);
-        if (pendingTimerRef.current)
-          window.clearTimeout(pendingTimerRef.current);
-        pendingTimerRef.current = window.setTimeout(
-          () => setPending(false),
-          520,
-        );
+      if (mode === "ignore_environment") {
+        void generateRecommendations({
+          intent: selectedIntent,
+          environmentMode: mode,
+          useCache: false,
+        });
+        return;
       }
+      void refreshContext().then((nextContext) => {
+        void generateRecommendations({
+          context: nextContext,
+          intent: selectedIntent,
+          environmentMode: mode,
+          useCache: false,
+        });
+      });
     },
-    [selectedIntent],
+    [generateRecommendations, refreshContext, selectedIntent],
   );
 
   const selectDiscoverCard = useCallback(
-    (card: DiscoverCard) => {
-      const track = tracks.find((candidate) => candidate.id === card.trackId);
-      if (!track) return;
-      selectIntent(card.presetIntent);
-      playTrack(track);
+    async (card: DiscoverCard) => {
+      setSelectedIntent(card.presetIntent);
+      setFeedback(null);
+      scrollToId("recommendations");
+      pendingSeedSelectionRef.current = card.trackId;
+      const next = await generateRecommendations({
+        intent: card.presetIntent,
+        seedTrackId: card.trackId,
+        environmentMode,
+        useCache: false,
+      });
+      const track =
+        next?.items.find(({ track }) => track.id === card.trackId)?.track ??
+        next?.items[0]?.track;
+      if (track) await playTrack(track);
     },
-    [playTrack, selectIntent, tracks],
+    [environmentMode, generateRecommendations, playTrack],
   );
 
   const refresh = useCallback(() => {
     setFeedback(null);
-    setPending(true);
-    if (pendingTimerRef.current) window.clearTimeout(pendingTimerRef.current);
-    pendingTimerRef.current = window.setTimeout(() => {
-      setPending(false);
-      setFeaturedTrackIndex(nextFeaturedTrackIndex);
-      showNotice("A new set has been shaped around your current preferences.");
-    }, 650);
-  }, [showNotice]);
+    void feedbackTracking.record({
+      event: "refresh_requested",
+      track: player.currentTrack ?? undefined,
+    });
+    void refreshRecommendations().then((next) => {
+      if (next) {
+        showNotice("A new set has been shaped around your current preferences.");
+      }
+    });
+  }, [
+    feedbackTracking,
+    player.currentTrack,
+    refreshRecommendations,
+    showNotice,
+  ]);
 
   useEffect(() => {
     return () => {
-      if (pendingTimerRef.current) window.clearTimeout(pendingTimerRef.current);
       if (noticeTimerRef.current) window.clearTimeout(noticeTimerRef.current);
     };
   }, []);
@@ -255,29 +228,16 @@ export function App() {
 
   const currentIntent = selectedIntent ? intentMeta[selectedIntent] : null;
   const featuredTrack =
-    recommendationItems[featuredTrackIndex]?.track ??
-    recommendationItems[0]!.track;
+    batch?.items.find(({ track }) => track.id === batch.featuredTrackId)
+      ?.track ??
+    tracks[0] ??
+    null;
 
   return (
     <div
       className={`app-shell ${showPlayerDock ? "app-shell--with-player" : ""}`}
       id="top"
     >
-      <audio
-        ref={audioRef}
-        onTimeUpdate={(event) => {
-          const audio = event.currentTarget;
-          setProgress(
-            audio.duration > 0 ? audio.currentTime / audio.duration : 0,
-          );
-        }}
-        onEnded={() => {
-          setIsPlaying(false);
-          setProgress(0);
-          goNext();
-        }}
-      />
-
       <main className="app-content">
         <section className="experience-card now-card" id="recommendations">
           <header className="card-heading">
@@ -320,18 +280,29 @@ export function App() {
           </header>
 
           <figure className="now-cover">
-            <img
-              src={featuredTrack.coverUrl}
-              alt={`${featuredTrack.title} album cover`}
-            />
+            {featuredTrack ? (
+              <img
+                src={featuredTrack.coverUrl}
+                alt={`${featuredTrack.title} album cover`}
+              />
+            ) : (
+              <div className="now-cover__placeholder">
+                {recommendationError
+                  ? "Recommendations are unavailable right now."
+                  : "Finding music for this moment…"}
+              </div>
+            )}
           </figure>
 
           <div className="now-rationale">
             <h2>AI&apos;s reason for this moment</h2>
             <p>
-              {currentIntent
-                ? `You chose ${currentIntent.label}. ${currentIntent.description}, while staying close to your long-term taste for textured, melodic music.`
-                : "Afternoons often find you choosing rhythmic, detail-rich music. It feels warm and humid today, so the selection keeps your melodic edge while lowering the overall intensity."}
+              {batch?.items[0]?.reason.summary ??
+                (recommendationError
+                  ? recommendationError
+                  : currentIntent
+                    ? `You chose ${currentIntent.label}. ${currentIntent.description}, and the recommendation engine is shaping a verified set.`
+                    : "The recommendation engine is shaping a verified set for your current context.")}
             </p>
           </div>
 
@@ -339,33 +310,53 @@ export function App() {
 
           <div className="recommendation-toolbar">
             <h2>Recommended for you</h2>
-            <p>{recommendationItems.length} selected tracks</p>
-            <button className="text-button" type="button" onClick={refresh}>
+            <p>
+              {recommendationLoading || contextLoading
+                ? "Shaping recommendations"
+                : `${tracks.length} selected tracks`}
+            </p>
+            <button
+              className="text-button"
+              type="button"
+              onClick={refresh}
+              disabled={recommendationLoading || contextLoading}
+            >
               <Icon name="refresh" size={17} />
               Refresh
             </button>
           </div>
 
           <div
-            className={`track-list ${pending ? "track-list--pending" : ""}`}
-            aria-busy={pending}
+            className={`track-list ${recommendationLoading ? "track-list--pending" : ""}`}
+            aria-busy={recommendationLoading}
           >
-            {recommendationItems.map((item) => (
-              <TrackCard
-                key={item.track.id}
-                item={item}
-                onPlay={() => playTrack(item.track)}
-              />
-            ))}
+            {batch?.items.map((item) => (
+                <TrackCard
+                  key={item.track.id}
+                  item={item}
+                  onPlay={() => playTrack(item.track)}
+                />
+              ))}
+            {!batch && recommendationLoading ? (
+              <div className="track-loading" role="status">
+                Checking anonymous playback and building your set…
+              </div>
+            ) : null}
           </div>
 
-          <div className="recommendation-feedback">
+          {batch ? <div className="recommendation-feedback">
             <p>Do these recommendations match your mood?</p>
             <div>
               <button
                 className={feedback === "fit" ? "selected" : ""}
                 type="button"
-                onClick={() => setFeedback("fit")}
+                onClick={() => {
+                  setFeedback("fit");
+                  void feedbackTracking.record({
+                    event: "batch_fit",
+                    track: player.currentTrack ?? tracks[0],
+                  });
+                }}
                 aria-label="These recommendations fit"
               >
                 <Icon name="thumb-up" size={18} />
@@ -373,20 +364,26 @@ export function App() {
               <button
                 className={feedback === "miss" ? "selected" : ""}
                 type="button"
-                onClick={() => setFeedback("miss")}
+                onClick={() => {
+                  setFeedback("miss");
+                  void feedbackTracking.record({
+                    event: "batch_miss",
+                    track: player.currentTrack ?? tracks[0],
+                  });
+                }}
                 aria-label="These recommendations do not fit"
               >
                 <Icon name="thumb-down" size={18} />
               </button>
             </div>
-          </div>
+          </div> : null}
         </section>
 
         <section className="mood-section" id="mood">
           <MoodSelector
             selectedIntent={selectedIntent}
             environmentMode={environmentMode}
-            pending={pending}
+            pending={recommendationLoading || contextLoading}
             onSelectIntent={selectIntent}
             onEnvironmentChange={changeEnvironment}
           />
@@ -396,38 +393,54 @@ export function App() {
           <div className="discover-heading">
             <h2>Discover</h2>
           </div>
-          <DiscoverGrid
-            edition={discoverEdition}
-            playableTrackIds={playableTrackIds}
-            onSelect={selectDiscoverCard}
-          />
+          {dailyDiscover ? (
+            <DiscoverGrid
+              edition={dailyDiscover}
+              onSelect={selectDiscoverCard}
+            />
+          ) : (
+            <div className="discover-grid discover-grid--loading" role="status">
+              {discoverError ?? (discoverLoading ? "Preparing today’s Discover edition…" : "Discover is unavailable.")}
+            </div>
+          )}
         </section>
       </main>
 
-      {showPlayerDock ? (
+      {showPlayerDock && currentTrack ? (
         <PlayerDock
           track={currentTrack}
-          isPlaying={isPlaying}
-          progress={progress}
-          onTogglePlayback={togglePlayback}
-          onNext={goNext}
+          isPlaying={player.isPlaying}
+          progress={player.progress}
+          onTogglePlayback={player.toggle}
+          onNext={skipNext}
           onOpen={() => setPlayerOpen(true)}
         />
       ) : null}
 
-      <ExpandedPlayer
+      {currentTrack ? <ExpandedPlayer
         currentTrack={currentTrack}
-        tracks={recommendationItems}
+        tracks={batch?.items ?? []}
         open={playerOpen}
-        isPlaying={isPlaying}
-        progress={progress}
+        isPlaying={player.isPlaying}
+        progress={player.progress}
+        currentTime={player.currentTime}
+        duration={player.duration}
+        lyrics={player.lyrics}
+        lyricTranslations={player.lyricTranslations}
+        activeLyricIndex={player.activeLyricIndex}
+        hasLyrics={player.hasLyrics}
+        lyricsOpen={player.lyricsOpen}
+        muted={player.muted}
         onClose={() => setPlayerOpen(false)}
-        onTogglePlayback={togglePlayback}
+        onTogglePlayback={player.toggle}
         onSelect={playTrack}
-        onNext={goNext}
-        onPrevious={goPrevious}
-        onRestart={restartTrack}
-      />
+        onNext={skipNext}
+        onPrevious={player.previous}
+        onRestart={player.restart}
+        onSeek={player.seek}
+        onToggleLyrics={player.toggleLyrics}
+        onToggleMute={player.toggleMute}
+      /> : null}
 
       <SettingsPanel
         open={settingsOpen}

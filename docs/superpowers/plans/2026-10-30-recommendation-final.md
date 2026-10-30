@@ -460,14 +460,14 @@ AI artist/song expansion lane          20%
 **Interfaces:**
 - Produces: `ListeningContext` with device local time, timezone, coarse location, weather, and source status.
 
-- [ ] Request browser/system location only when context is needed.
-- [ ] Do not add city or location controls to Settings.
-- [ ] If permission is denied or geolocation fails, return a context without weather.
-- [ ] Cache weather for 15 minutes in IndexedDB.
-- [ ] Keep `Use my current environment` selected by default.
-- [ ] When `Ignore the environment` is selected, set weather to `null` in the recommendation request.
-- [ ] Test success, denial, timeout, and cached weather.
-- [ ] Commit with `feat: add local context and weather`.
+- [x] Request browser/system location only when context is needed.
+- [x] Do not add city or location controls to Settings.
+- [x] If permission is denied or geolocation fails, return a context without weather.
+- [x] Cache weather for 15 minutes in IndexedDB.
+- [x] Keep `Use my current environment` selected by default.
+- [x] When `Ignore the environment` is selected, set weather to `null` in the recommendation request.
+- [x] Test success, denial, timeout, and cached weather.
+- [x] Commit with `feat: add local context and weather`.
 
 ### Task 3.2: Implement AI planner, reranker, and explanation writer
 
@@ -498,15 +498,15 @@ type RerankCandidates = (input: {
 }) => Promise<AIRerankResult>;
 ```
 
-- [ ] Use an OpenAI-compatible JSON request against the configured AI Base URL.
-- [ ] The planner outputs context summary, target dimensions, search queries, artist ideas, and song ideas.
-- [ ] The reranker receives only verified candidates.
-- [ ] Reject IDs not present in the candidate set.
-- [ ] Reject candidates that violate artist diversity or explicit dislike rules.
-- [ ] Ask the reranker to preserve at least one non-favorite artist when enough candidates exist.
-- [ ] Write English explanations from verified metadata only.
-- [ ] Persist the AI request purpose, result summary, and fallback reason in `aiDecisions`; never persist the API key.
-- [ ] Implement local fallback scoring:
+- [x] Use an OpenAI-compatible JSON request against the configured AI Base URL.
+- [x] The planner outputs context summary, target dimensions, search queries, artist ideas, and song ideas.
+- [x] The reranker receives only verified candidates.
+- [x] Reject IDs not present in the candidate set.
+- [x] Reject candidates that violate artist diversity or explicit dislike rules.
+- [x] Ask the reranker to preserve at least one non-favorite artist when enough candidates exist.
+- [x] Write English explanations from verified metadata only.
+- [x] Persist the AI request purpose, result summary, and fallback reason in `aiDecisions`; never persist the API key.
+- [x] Implement local fallback scoring:
 
 ```text
 0.35 favorite similarity
@@ -516,8 +516,8 @@ type RerankCandidates = (input: {
 0.10 diversity
 ```
 
-- [ ] Test valid reranking, out-of-pool IDs, unplayable IDs, duplicate artists, AI timeout, malformed JSON, and missing API key.
-- [ ] Commit with `feat: add AI-guided recommendation ranking`.
+- [x] Test valid reranking, out-of-pool IDs, unplayable IDs, duplicate artists, AI timeout, malformed JSON, and missing API key.
+- [x] Commit with `feat: add AI-guided recommendation ranking`.
 
 ### Task 3.3: Implement final recommendation assembly
 
@@ -532,17 +532,17 @@ type RerankCandidates = (input: {
 - Consumes: context, favorites, verified candidates, AI reranking, and recent events.
 - Produces: `RecommendationBatch` with exactly three verified items and one `featuredTrackId`.
 
-- [ ] Replace mock recommendation rendering with `useRecommendationBatch()`.
-- [ ] Keep the mock file only for tests and Storybook-style local fixtures.
-- [ ] Make clicking any Mood run one recommendation request.
-- [ ] Disable duplicate requests while one is in flight.
-- [ ] Apply favorite similarity, five-dimension candidates, AI context search, and AI expansion.
-- [ ] Keep `/recommend/songs` and `/personalized/newsong` as fallback only.
-- [ ] Pick `featuredTrackId` from the final verified items.
-- [ ] Save the batch and its provenance in IndexedDB.
-- [ ] Use the cached batch only after all its tracks pass a fresh URL check.
-- [ ] Test cold start, favorite-based recommendation, environment switching, refresh, cached recovery, and exactly three playable outputs.
-- [ ] Commit with `feat: assemble final local recommendation batches`.
+- [x] Replace mock recommendation rendering with `useRecommendationBatch()`.
+- [x] Keep the mock file only for tests and Storybook-style local fixtures.
+- [x] Make clicking any Mood run one recommendation request.
+- [x] Disable duplicate requests while one is in flight.
+- [x] Apply favorite similarity, five-dimension candidates, AI context search, and AI expansion.
+- [x] Keep `/recommend/songs` and `/personalized/newsong` as fallback only.
+- [x] Pick `featuredTrackId` from the final verified items.
+- [x] Save the batch and its provenance in IndexedDB.
+- [x] Use the cached batch only after all its tracks pass a fresh URL check.
+- [x] Test cold start, favorite-based recommendation, environment switching, refresh, cached recovery, and exactly three playable outputs.
+- [x] Include this task in the consolidated Phase 3 completion commit.
 
 ### Task 3.4: Implement daily DISCOVER
 
@@ -556,18 +556,18 @@ type RerankCandidates = (input: {
 **Interfaces:**
 - Produces: A stable four-card edition keyed by local date and timezone.
 
-- [ ] Generate exactly four unique tracks from the verified daily candidate pool.
-- [ ] Require every card track to have a non-empty URL.
-- [ ] Use each track’s cover as the card image.
-- [ ] Ask AI for four English card titles and short context labels.
-- [ ] Use deterministic English title templates when AI is unavailable.
-- [ ] Save the edition under `editionDate + timeZone`.
-- [ ] Reuse the saved edition throughout the local day.
-- [ ] Invalidate and regenerate after the local date changes.
-- [ ] Clicking a card sets its `seedTrackId`, triggers a recommendation batch, and opens the selected track.
-- [ ] Ensure the clicked seed track is present in the returned verified batch.
-- [ ] Test four-card uniqueness, daily stability, day rollover, missing AI key, and unplayable-card replacement.
-- [ ] Commit with `feat: add local daily Discover editions`.
+- [x] Generate exactly four unique tracks from the verified daily candidate pool.
+- [x] Require every card track to have a non-empty URL.
+- [x] Use each track’s cover as the card image.
+- [x] Ask AI for four English card titles and short context labels.
+- [x] Use deterministic English title templates when AI is unavailable.
+- [x] Save the edition under `editionDate + timeZone`.
+- [x] Reuse the saved edition throughout the local day.
+- [x] Invalidate and regenerate after the local date changes.
+- [x] Clicking a card sets its `seedTrackId`, triggers a recommendation batch, and opens the selected track.
+- [x] Ensure the clicked seed track is present in the returned verified batch.
+- [x] Test four-card uniqueness, daily stability, day rollover, missing AI key, and unplayable-card replacement.
+- [x] Include this task in the consolidated Phase 3 completion commit.
 
 ### Task 3.5: Implement the audio engine and synchronized lyrics
 
@@ -587,18 +587,18 @@ type RerankCandidates = (input: {
 - Consumes: verified tracks, playback resolver, and `/lyric/new`.
 - Produces: `PlayerController` with `play`, `pause`, `seek`, `restart`, `next`, `previous`, `setVolume`, lyric state, and queue state.
 
-- [ ] Move audio state out of `App.tsx`.
-- [ ] Resolve a fresh URL on play.
-- [ ] Restart sets `currentTime` to zero and preserves the playing state.
-- [ ] Keep the five transport buttons in their finalized order.
-- [ ] Pre-resolve the next track URL without starting playback.
-- [ ] Parse original LRC, rich lyric data, and translation.
-- [ ] Use binary search to select the active lyric line.
-- [ ] Synchronize after play, pause, seek, restart, and track change.
-- [ ] Hide the lyrics button and surface when lyrics are unavailable.
-- [ ] On playback failure, notify the user and advance to the next verified track.
-- [ ] Test URL refresh, restart, previous, next, queue completion, lyric offset, seek, and instrumental tracks.
-- [ ] Commit with `feat: add anonymous playback and synchronized lyrics`.
+- [x] Move audio state out of `App.tsx`.
+- [x] Resolve a fresh URL on play.
+- [x] Restart sets `currentTime` to zero and preserves the playing state.
+- [x] Keep the five transport buttons in their finalized order.
+- [x] Pre-resolve the next track URL without starting playback.
+- [x] Parse original LRC, rich lyric data, and translation.
+- [x] Use binary search to select the active lyric line.
+- [x] Synchronize after play, pause, seek, restart, and track change.
+- [x] Hide the lyrics button and surface when lyrics are unavailable.
+- [x] On playback failure, notify the user and advance to the next verified track.
+- [x] Test URL refresh, restart, previous, next, queue completion, lyric offset, seek, and instrumental tracks.
+- [x] Include this task in the consolidated Phase 3 completion commit.
 
 ### Task 3.6: Update the single long-term profile
 
@@ -612,26 +612,26 @@ type RerankCandidates = (input: {
 - Consumes: favorites, play events, skips, completion, refresh, and thumb feedback.
 - Produces: One versioned `TasteProfile` stored in IndexedDB.
 
-- [ ] Favorite adds strong positive weight to track, artist, credits, language, and genre.
-- [ ] Repeat play adds strong positive weight.
-- [ ] Full completion adds medium positive weight.
-- [ ] Skip before 30 seconds adds weak negative weight.
-- [ ] Explicit dislike adds strong negative weight.
-- [ ] Batch thumbs affect context affinity rather than permanently rejecting every track.
-- [ ] Temperature, humidity, time, and weather affinities are stored inside the same profile object.
-- [ ] Apply time decay to older observations.
-- [ ] Test that one early skip does not erase a favorite track or artist.
-- [ ] Commit with `feat: learn a local long-term recommendation profile`.
+- [x] Favorite adds strong positive weight to track, artist, credits, language, and genre.
+- [x] Repeat play adds strong positive weight.
+- [x] Full completion adds medium positive weight.
+- [x] Skip before 30 seconds adds weak negative weight.
+- [x] Explicit dislike adds strong negative weight.
+- [x] Batch thumbs affect context affinity rather than permanently rejecting every track.
+- [x] Temperature, humidity, time, and weather affinities are stored inside the same profile object.
+- [x] Apply time decay to older observations.
+- [x] Test that one early skip does not erase a favorite track or artist.
+- [x] Include this task in the consolidated Phase 3 completion commit.
 
 **Phase 3 acceptance:**
 
-- [ ] AI receives favorites and verified candidate metadata and materially participates in source planning and reranking.
-- [ ] Cold-start recommendations work without favorites or an AI key.
-- [ ] Favorites activate the four main source lanes.
-- [ ] NOW and Mood always contain three anonymous playable tracks.
-- [ ] DISCOVER always contains four anonymous playable tracks with song covers and stable daily AI titles.
-- [ ] Dynamic lyrics follow playback, seeking, and restart.
-- [ ] No recommendation path can display a track with an empty playback URL.
+- [x] AI receives favorites and verified candidate metadata and materially participates in source planning and reranking.
+- [x] Cold-start recommendations work without favorites or an AI key.
+- [x] Favorites activate the four main source lanes.
+- [x] NOW and Mood always contain three anonymous playable tracks.
+- [x] DISCOVER always contains four anonymous playable tracks with song covers and stable daily AI titles.
+- [x] Dynamic lyrics follow playback, seeking, and restart.
+- [x] No recommendation path can display a track with an empty playback URL.
 
 ---
 

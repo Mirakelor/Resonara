@@ -10,6 +10,14 @@ import {
   removeFavorite,
 } from "../../db/repositories/favorites";
 import { recordFeedback } from "../../db/repositories/feedback";
+import {
+  getProfile,
+  saveProfile,
+} from "../../db/repositories/profile";
+import {
+  applyProfileUpdate,
+  createDefaultProfile,
+} from "../../recommendation/profileUpdater";
 import { create } from "zustand";
 
 type FavoritesState = {
@@ -102,6 +110,18 @@ export const useFavoritesStore = create<FavoritesState>((set, get) => ({
       } else {
         await addFavorite(optimisticRecord);
         await recordFeedback({ trackId: track.id, event: "liked" });
+      }
+      try {
+        const profile = (await getProfile()) ?? createDefaultProfile();
+        await saveProfile(
+          applyProfileUpdate(profile, {
+            event: existing ? "unliked" : "liked",
+            track,
+            enrichment,
+          }),
+        );
+      } catch {
+        // Favorite state remains valid if the derived profile cannot update.
       }
     } catch (error) {
       if ((get().revisions[track.id] ?? 0) !== revision) return;

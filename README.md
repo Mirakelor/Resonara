@@ -2,10 +2,11 @@
 
 Context-aware music recommendations built around the right music for the right moment.
 
-The repository contains the finalized visual baseline, the local-first
-foundation, and the verified anonymous candidate retrieval layer. NOW
-ranking, Discover generation, and synchronized lyrics remain mock-backed until
-Phase 3.
+The web application now includes the complete local-first recommendation flow:
+real anonymous candidate retrieval, AI planning and reranking, daily Discover,
+persistent favorites, a local learning profile, synchronized lyrics, and
+verified playback. Cross-platform packaging remains the final implementation
+milestone.
 
 ## Run
 
@@ -31,6 +32,9 @@ pnpm test:e2e
 pnpm provider:smoke
 RESONARA_AI_API_KEY=your-key pnpm ai:smoke
 ```
+
+Run `pnpm dev` and open `http://localhost:4173`. AI and music credentials are
+entered in Settings and remain in the browser's IndexedDB.
 
 The Settings panel is opened from the gear in the NOW card. Its values,
 favorites, caches, and future recommendation state are stored locally in

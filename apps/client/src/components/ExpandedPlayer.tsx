@@ -1,5 +1,10 @@
 import type { RecommendationItem, Track } from "@resonara/contracts";
 import { useFavorite } from "../features/favorites/useFavorite";
+import { LyricsPanel } from "../features/player/LyricsPanel";
+import type {
+  LyricLine,
+  TranslationMap,
+} from "../features/player/lyrics";
 import { Icon } from "./Icon";
 
 type ExpandedPlayerProps = {
@@ -8,12 +13,23 @@ type ExpandedPlayerProps = {
   open: boolean;
   isPlaying: boolean;
   progress: number;
+  currentTime: number;
+  duration: number;
+  lyrics: LyricLine[] | null;
+  lyricTranslations: TranslationMap | null;
+  activeLyricIndex: number;
+  hasLyrics: boolean;
+  lyricsOpen: boolean;
+  muted: boolean;
   onClose: () => void;
   onTogglePlayback: () => void;
   onSelect: (track: Track) => void;
   onNext: () => void;
   onPrevious: () => void;
   onRestart: () => void;
+  onSeek: (seconds: number) => void;
+  onToggleLyrics: () => void;
+  onToggleMute: () => void;
 };
 
 export function ExpandedPlayer({
@@ -22,12 +38,23 @@ export function ExpandedPlayer({
   open,
   isPlaying,
   progress,
+  currentTime,
+  duration,
+  lyrics,
+  lyricTranslations,
+  activeLyricIndex,
+  hasLyrics,
+  lyricsOpen,
+  muted,
   onClose,
   onTogglePlayback,
   onSelect,
   onNext,
   onPrevious,
   onRestart,
+  onSeek,
+  onToggleLyrics,
+  onToggleMute,
 }: ExpandedPlayerProps) {
   const { isFavorite, toggleFavorite } = useFavorite(currentTrack);
 
@@ -47,14 +74,26 @@ export function ExpandedPlayer({
       >
         <header className="expanded-player__header">
           <p className="eyebrow">Now Playing</p>
-          <button
-            type="button"
-            className="expanded-player__close"
-            onClick={onClose}
-            aria-label="Close player"
-          >
-            <Icon name="close" size={20} />
-          </button>
+          <div className="expanded-player__header-actions">
+            {hasLyrics ? (
+              <button
+                type="button"
+                className="expanded-player__lyrics-toggle"
+                onClick={onToggleLyrics}
+                aria-pressed={lyricsOpen}
+              >
+                {lyricsOpen ? "Hide lyrics" : "Show lyrics"}
+              </button>
+            ) : null}
+            <button
+              type="button"
+              className="expanded-player__close"
+              onClick={onClose}
+              aria-label="Close player"
+            >
+              <Icon name="close" size={20} />
+            </button>
+          </div>
         </header>
 
         <figure className="expanded-player__cover">
@@ -90,9 +129,19 @@ export function ExpandedPlayer({
           <span>{currentTrack.genre}</span>
         </div>
 
-        <div className="player-progress">
-          <span style={{ width: `${progress * 100}%` }} />
-        </div>
+        <input
+          className="player-progress"
+          type="range"
+          min="0"
+          max={Math.max(duration, 0.01)}
+          step="0.1"
+          value={Math.min(currentTime, Math.max(duration, 0.01))}
+          aria-label="Seek in track"
+          onChange={(event) => onSeek(Number(event.target.value))}
+          style={{
+            background: `linear-gradient(90deg, var(--color-accent) 0 ${progress * 100}%, rgba(23, 24, 21, 0.12) ${progress * 100}% 100%)`,
+          }}
+        />
 
         <div className="expanded-controls">
           <button type="button" onClick={onRestart} aria-label="Restart track">
@@ -112,10 +161,22 @@ export function ExpandedPlayer({
           <button type="button" onClick={onNext} aria-label="Next track">
             <Icon name="next" size={19} />
           </button>
-          <button type="button" aria-label="Volume">
+          <button
+            type="button"
+            aria-label={muted ? "Unmute" : "Mute"}
+            onClick={onToggleMute}
+          >
             <Icon name="volume" size={19} />
           </button>
         </div>
+
+        {hasLyrics && lyricsOpen && lyrics && lyricTranslations ? (
+          <LyricsPanel
+            lines={lyrics}
+            translations={lyricTranslations}
+            activeIndex={activeLyricIndex}
+          />
+        ) : null}
 
         <section className="player-queue" aria-labelledby="queue-title">
           <div className="player-queue__header">

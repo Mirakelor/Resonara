@@ -8,8 +8,8 @@ export async function publicFallbackSources(
   if (limit <= 0) return [];
 
   const [recommended, newSongs] = await Promise.all([
-    provider.getPublicRecommendations(),
-    provider.getNewSongs(limit),
+    provider.getPublicRecommendations().catch(() => []),
+    provider.getNewSongs(limit).catch(() => []),
   ]);
 
   return [

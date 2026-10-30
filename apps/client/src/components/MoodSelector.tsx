@@ -1,5 +1,5 @@
 import type { EnvironmentMode, ListeningIntent } from "@resonara/contracts";
-import { intentMeta } from "../data/mockData";
+import { intentMeta } from "../data/intents";
 import { Icon, type IconName } from "./Icon";
 
 type MoodSelectorProps = {
@@ -47,6 +47,7 @@ export function MoodSelector({
             key={intent}
             onClick={() => onSelectIntent(intent)}
             aria-pressed={selectedIntent === intent}
+            disabled={pending}
           >
             <Icon name={icon} size={23} />
             <span>{label}</span>
@@ -67,6 +68,7 @@ export function MoodSelector({
             }
             onClick={() => onEnvironmentChange("use_current")}
             aria-pressed={environmentMode === "use_current"}
+            disabled={pending}
           >
             <span>
               <strong>Use my current environment</strong>
@@ -84,6 +86,7 @@ export function MoodSelector({
             }
             onClick={() => onEnvironmentChange("ignore_environment")}
             aria-pressed={environmentMode === "ignore_environment"}
+            disabled={pending}
           >
             <span>
               <strong>Ignore the environment</strong>

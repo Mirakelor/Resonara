@@ -31,6 +31,7 @@ export interface RecommendationBatchRow {
 }
 
 export interface DiscoverEditionRow {
+  editionKey: string;
   editionDate: string;
   value: DiscoverEdition;
   expiresAt: string;

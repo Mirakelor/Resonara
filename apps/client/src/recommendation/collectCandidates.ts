@@ -91,24 +91,24 @@ export async function collectCandidates({
       provider,
       seeds,
       CANDIDATE_QUOTAS.favoriteSimilar,
-    ),
+    ).catch(() => []),
     contextSearchSources(
       provider,
       planner,
       context,
       intent,
       CANDIDATE_QUOTAS.contextSearch,
-    ),
+    ).catch(() => []),
     sameDimensionSources(
       provider,
       seeds,
       CANDIDATE_QUOTAS.sameDimensions,
-    ),
+    ).catch(() => []),
     aiExpansionSources(
       provider,
       planner,
       CANDIDATE_QUOTAS.aiExpansion,
-    ),
+    ).catch(() => []),
   ]);
 
   let merged = mergeSourced(primary.flat());

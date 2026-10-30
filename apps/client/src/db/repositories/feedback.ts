@@ -25,3 +25,13 @@ export async function recordFeedback(
   await resonaraDb.feedbackEvents.add(feedback);
   return feedback;
 }
+
+export async function listRecentFeedback(
+  limit = 50,
+): Promise<RecommendationFeedback[]> {
+  return resonaraDb.feedbackEvents
+    .orderBy("occurredAt")
+    .reverse()
+    .limit(limit)
+    .toArray();
+}

@@ -10,6 +10,7 @@ export const candidateSourceSchema = z.enum([
   "same_genre",
   "ai_song_expansion",
   "ai_artist_expansion",
+  "discover_seed",
   "recommend_songs",
   "personalized_newsong",
 ]);
@@ -82,6 +83,7 @@ export const recommendationItemSchema = z.object({
   reason: recommendationReasonSchema,
   confidence: z.number().min(0).max(1),
   source: candidateSourceSchema.optional(),
+  sources: z.array(candidateSourceSchema).optional(),
   seedTrackId: z.string().min(1).optional(),
 });
 
@@ -128,6 +130,7 @@ export const discoverCardSchema = z.object({
 
 export const discoverEditionSchema = z.object({
   editionDate: z.iso.date(),
+  timeZone: z.string().min(1).optional(),
   generatedAt: z.iso.datetime({ offset: true }),
   expiresAt: z.iso.datetime({ offset: true }),
   cards: z.array(discoverCardSchema).length(4),
@@ -160,13 +163,25 @@ export const contextAffinitySchema = z.object({
   confidence: z.number().min(0).max(1),
 });
 
+export const affinitySchema = z.object({
+  key: z.string().min(1),
+  weight: z.number().min(-1).max(1),
+  updatedAt: z.iso.datetime({ offset: true }),
+});
+
 export const tasteProfileSchema = z.object({
+  version: z.number().int().positive().optional(),
   updatedAt: z.iso.datetime({ offset: true }),
   topGenres: z.array(z.string().min(1)).max(20),
   topArtists: z.array(z.string().min(1)).max(30),
   energyPreference: z.number().min(0).max(1),
   familiarityPreference: z.number().min(0).max(1),
   contextAffinities: z.array(contextAffinitySchema).max(100),
+  trackAffinities: z.array(affinitySchema).max(500).optional(),
+  artistAffinities: z.array(affinitySchema).max(200).optional(),
+  creditAffinities: z.array(affinitySchema).max(500).optional(),
+  languageAffinities: z.array(affinitySchema).max(50).optional(),
+  genreAffinities: z.array(affinitySchema).max(200).optional(),
 });
 
 export const playbackResolutionSchema = z.object({
@@ -198,4 +213,5 @@ export type RecommendationFeedback = z.infer<
   typeof recommendationFeedbackSchema
 >;
 export type TasteProfile = z.infer<typeof tasteProfileSchema>;
+export type Affinity = z.infer<typeof affinitySchema>;
 export type PlaybackResolution = z.infer<typeof playbackResolutionSchema>;
