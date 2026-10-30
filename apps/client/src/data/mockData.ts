@@ -11,6 +11,7 @@ export const tracks: Record<string, Track> = {
     provider: "netease",
     title: "Undefined",
     artist: "PerVade / 第五人格",
+    artistIds: [],
     album: "Undefined",
     coverUrl:
       "https://p3.music.126.net/ccu6U_1qtxIIz5ReqhhQ0w==/109951174144800369.jpg?param=800y800",
@@ -25,6 +26,7 @@ export const tracks: Record<string, Track> = {
     provider: "netease",
     title: "Tremolo",
     artist: "Chilli Beans.",
+    artistIds: ["49392892"],
     album: "Chilli Beans.",
     coverUrl:
       "https://p4.music.126.net/L8f07BDPoT_tAHqmTUgP5A==/109951167596576841.jpg?param=800y800",
@@ -39,6 +41,7 @@ export const tracks: Record<string, Track> = {
     provider: "netease",
     title: "Hypnagogia",
     artist: "Polished Chrome",
+    artistIds: [],
     album: "Music for Headphones",
     coverUrl:
       "https://p4.music.126.net/a5yJjjKgMIUUYlv1jhOT_w==/109951172902500934.jpg?param=800y800",
@@ -53,6 +56,7 @@ export const tracks: Record<string, Track> = {
     provider: "netease",
     title: "madeleine",
     artist: "brakence",
+    artistIds: [],
     album: "marroW",
     coverUrl:
       "https://p3.music.126.net/Y2lzBSno1hqVrQH34X9-Cg==/109951174137925091.jpg?param=800y800",

@@ -17,6 +17,7 @@ const favoriteTrack = {
   provider: "netease" as const,
   title: "Tremolo",
   artist: "Chilli Beans.",
+  artistIds: ["49392892"],
   album: "Chilli Beans.",
   coverUrl:
     "https://p4.music.126.net/L8f07BDPoT_tAHqmTUgP5A==/109951167596576841.jpg",

@@ -60,6 +60,7 @@ export const trackSchema = z.object({
   provider: z.literal("netease"),
   title: z.string().min(1),
   artist: z.string().min(1),
+  artistIds: z.array(z.string().min(1)).max(20).default([]),
   album: z.string().nullable(),
   coverUrl: z.url(),
   genre: z.string().min(1),

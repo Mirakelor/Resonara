@@ -7,6 +7,7 @@ import {
   feedbackEventSchema,
   recommendationBatchSchema,
   recommendationRequestSchema,
+  trackSchema,
 } from "./index";
 
 const context = {
@@ -149,5 +150,15 @@ describe("local app contracts", () => {
   it("keeps favorite removal events distinct from dislikes", () => {
     expect(feedbackEventSchema.parse("unliked")).toBe("unliked");
     expect(feedbackEventSchema.parse("disliked")).toBe("disliked");
+  });
+
+  it("preserves anonymous artist IDs and defaults them for legacy snapshots", () => {
+    expect(
+      trackSchema.parse({
+        ...track,
+        artistIds: ["49392892"],
+      }).artistIds,
+    ).toEqual(["49392892"]);
+    expect(trackSchema.parse(track).artistIds).toEqual([]);
   });
 });
