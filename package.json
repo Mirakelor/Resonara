@@ -1,0 +1,16 @@
+{
+  "name": "resonara",
+  "private": true,
+  "version": "0.1.0",
+  "packageManager": "pnpm@11.25.0",
+  "scripts": {
+    "dev": "pnpm --filter @resonara/client dev",
+    "build": "pnpm -r --if-present build",
+    "typecheck": "pnpm -r --if-present typecheck",
+    "test": "pnpm -r --if-present test",
+    "test:e2e": "pnpm --filter @resonara/client test:e2e",
+    "provider:smoke": "node scripts/provider-smoke.mjs",
+    "tauri:dev": "pnpm --filter @resonara/client tauri:dev",
+    "tauri:build": "pnpm --filter @resonara/client tauri:build"
+  }
+}

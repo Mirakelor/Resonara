@@ -1,0 +1,30 @@
+@import url("https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&family=Noto+Serif+SC:wght@500;600;700&display=swap");
+
+:root {
+  --color-paper: #ffffff;
+  --color-paper-soft: #f4f3ef;
+  --color-ink: #171815;
+  --color-ink-soft: #555952;
+  --color-ink-faint: #8c9088;
+  --color-line: rgba(23, 24, 21, 0.12);
+  --color-line-strong: rgba(23, 24, 21, 0.22);
+  --color-accent: #d25f43;
+  --color-accent-soft: #f0dfd9;
+  --color-glass: rgba(250, 249, 246, 0.88);
+  --color-dark-glass: rgba(17, 18, 16, 0.9);
+  --font-sans: "Manrope", "Avenir Next", "Segoe UI", sans-serif;
+  --font-display: "Noto Serif SC", "Songti SC", "STSong", serif;
+  --text-xs: 0.6875rem;
+  --text-sm: 0.8125rem;
+  --text-md: 0.9375rem;
+  --text-lg: 1.125rem;
+  --text-xl: clamp(1.5rem, 2.3vw, 2.25rem);
+  --text-display: clamp(2.9rem, 5.7vw, 5.75rem);
+  --radius-sm: 0.5rem;
+  --radius-md: 1rem;
+  --radius-lg: 1.75rem;
+  --shadow-soft: 0 24px 80px rgba(21, 19, 15, 0.12);
+  --page-gutter: clamp(1.25rem, 5vw, 5rem);
+  --content-width: 76rem;
+  --ease-out: cubic-bezier(0.2, 0.7, 0.2, 1);
+}
