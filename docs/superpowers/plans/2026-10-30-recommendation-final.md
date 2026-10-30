@@ -267,19 +267,19 @@ aiDecisions
 - Consumes: `favorites` repository and English UI copy.
 - Produces: `toggleFavorite(track, enrichment)`, `isFavorite(trackId)`, and matching heart state in recommendation rows and the player.
 
-- [ ] Add a heart button beside each row play button without changing row height.
-- [ ] Add a heart button beside the current track title in the player without changing the five transport buttons.
-- [ ] Use outline heart for not saved and filled heart for saved.
-- [ ] Apply an optimistic update, then write the favorite snapshot to IndexedDB.
-- [ ] Roll back optimistic state if the IndexedDB write fails.
-- [ ] Remove a favorite on second click.
-- [ ] Record `liked` and `unliked` feedback events while preserving separate favorite state.
-- [ ] Test:
+- [x] Add a heart button beside each row play button without changing row height.
+- [x] Add a heart button beside the current track title in the player without changing the five transport buttons.
+- [x] Use outline heart for not saved and filled heart for saved.
+- [x] Apply an optimistic update, then write the favorite snapshot to IndexedDB.
+- [x] Roll back optimistic state if the IndexedDB write fails.
+- [x] Remove a favorite on second click.
+- [x] Record `liked` and `unliked` feedback events while preserving separate favorite state.
+- [x] Test:
   - Favorite toggles in the recommendation row.
   - Favorite toggles in the player.
   - Both surfaces show the same state.
   - Reload restores favorite state from IndexedDB.
-- [ ] Commit with `feat: add persistent favorite controls`.
+- [x] Commit with `feat: add persistent favorite controls`.
 
 ### Task 2.2: Implement the anonymous Netease adapter
 
@@ -311,7 +311,7 @@ interface NeteaseProvider {
 }
 ```
 
-- [ ] Implement only anonymous endpoints:
+- [x] Implement only anonymous endpoints:
   - `/recommend/songs`
   - `/personalized/newsong`
   - `/search`
@@ -321,15 +321,15 @@ interface NeteaseProvider {
   - `/song/wiki/summary`
   - `/lyric/new`
   - `/song/url/v1`
-- [ ] Do not implement `/recommend/resource`, `/simi/artist`, or `/personalized/playlist`; anonymous probes returned login-required, login-required, and 404 respectively.
-- [ ] Map artist IDs and names from `/song/detail`.
-- [ ] Map language, genre tags, recommendation tags, instrumental flag, and BPM from `/song/wiki/summary`.
-- [ ] Parse LRC and rich lyric-credit structures from `/lyric/new`.
-- [ ] Normalize credits by trimming spaces, unifying punctuation, and case-folding Latin text.
-- [ ] Mark missing credits as empty arrays rather than inferring values.
-- [ ] Batch playback URL resolution in groups of at most 20 IDs.
-- [ ] Mark a track playable only when `data[].url` is a non-empty string.
-- [ ] Add an anonymous provider smoke script:
+- [x] Do not implement `/recommend/resource`, `/simi/artist`, or `/personalized/playlist`; anonymous probes returned login-required, login-required, and 404 respectively.
+- [x] Map artist IDs and names from `/song/detail`.
+- [x] Map language, genre tags, recommendation tags, instrumental flag, and BPM from `/song/wiki/summary`.
+- [x] Parse LRC and rich lyric-credit structures from `/lyric/new`.
+- [x] Normalize credits by trimming spaces, unifying punctuation, and case-folding Latin text.
+- [x] Mark missing credits as empty arrays rather than inferring values.
+- [x] Batch playback URL resolution in groups of at most 20 IDs.
+- [x] Mark a track playable only when `data[].url` is a non-empty string.
+- [x] Add an anonymous provider smoke script:
 
 ```bash
 pnpm provider:smoke
@@ -337,7 +337,7 @@ pnpm provider:smoke
 
 The smoke script validates response shapes and prints endpoint latency, result counts, playable counts, and whether lyrics are present. External-service failures are diagnostic and do not fail the fixed-fixture unit suite.
 
-- [ ] Test fixtures for:
+- [x] Test fixtures for:
   - Search with five results.
   - Similar songs.
   - Artist songs.
@@ -345,7 +345,7 @@ The smoke script validates response shapes and prints endpoint latency, result c
   - Chinese and English lyric credits.
   - Instrumental lyrics.
   - Mixed playable and non-playable URL responses.
-- [ ] Commit with `feat: add tested anonymous Netease adapter`.
+- [x] Commit with `feat: add tested anonymous Netease adapter`.
 
 ### Task 2.3: Build five-dimension taste seeds from favorites
 
@@ -359,22 +359,22 @@ The smoke script validates response shapes and prints endpoint latency, result c
 - Consumes: Favorite records, wiki enrichment, lyric credits, and artist IDs.
 - Produces: `TasteSeed[]` with artist, lyricist, composer, language, and genre dimensions.
 
-- [ ] Build one `TasteSeed` per favorite.
-- [ ] Use artist IDs for same-artist lookup.
-- [ ] Use normalized name arrays for same-lyricist and same-composer lookup.
-- [ ] Search each credit name through `/search`.
-- [ ] Fetch `/lyric/new` for every credit-search candidate used to claim a credit match.
-- [ ] Keep a credit-search candidate only after an exact normalized credit match.
-- [ ] Fetch `/song/wiki/summary` for every same-language or same-genre candidate used to claim a tag match.
-- [ ] Treat missing tags as unknown; never let AI convert unknown into a verified match.
-- [ ] Test:
+- [x] Build one `TasteSeed` per favorite.
+- [x] Use artist IDs for same-artist lookup.
+- [x] Use normalized name arrays for same-lyricist and same-composer lookup.
+- [x] Search each credit name through `/search`.
+- [x] Fetch `/lyric/new` for every credit-search candidate used to claim a credit match.
+- [x] Keep a credit-search candidate only after an exact normalized credit match.
+- [x] Fetch `/song/wiki/summary` for every same-language or same-genre candidate used to claim a tag match.
+- [x] Treat missing tags as unknown; never let AI convert unknown into a verified match.
+- [x] Test:
   - Same artist uses artist ID.
   - Same composer requires verified composer credit.
   - Same lyricist requires verified lyricist credit.
   - Missing credits skip that lane.
   - Japanese and English language tags map exactly.
   - `纯音乐` maps to `instrumental`, not language.
-- [ ] Commit with `feat: derive recommendation seeds from favorites`.
+- [x] Commit with `feat: derive recommendation seeds from favorites`.
 
 ### Task 2.4: Implement the four primary candidate lanes
 
@@ -391,7 +391,7 @@ The smoke script validates response shapes and prints endpoint latency, result c
 - Consumes: Taste seeds, provider adapter, AI planner output, recent feedback, and deterministic fallback queries.
 - Produces: Deduplicated `Candidate[]` carrying every source and verified dimension match.
 
-- [ ] Candidate quotas:
+- [x] Candidate quotas:
 
 ```text
 Favorite plus similar-songs lane       30%
@@ -400,16 +400,16 @@ Same-dimension lane                    25%
 AI artist/song expansion lane          20%
 ```
 
-- [ ] `favoriteSimilar`: use up to three recent favorites and `/simi/song`.
-- [ ] `contextSearch`: use AI queries when available; otherwise use deterministic queries built from Mood, time bucket, weather condition, language, and genre.
-- [ ] `sameDimensions`: run artist, lyricist, composer, language, genre, and language-plus-genre paths with the priority order defined in the design.
-- [ ] `aiExpansion`: accept only AI-suggested artist names or search phrases; resolve every one through `/search`.
-- [ ] `publicFallback`: call `/recommend/songs` and `/personalized/newsong` only when primary lanes produce fewer than 12 playable candidates or when favorites are empty.
-- [ ] Merge duplicates by track ID and retain a set of all provenance paths.
-- [ ] Never mark a dimension match unless the corresponding metadata verification succeeded.
-- [ ] Cap the raw candidate pool at 80 tracks.
-- [ ] Test source quotas, duplicate merging, cold start, and fallback activation.
-- [ ] Commit with `feat: collect recommendations from four primary lanes`.
+- [x] `favoriteSimilar`: use up to three recent favorites and `/simi/song`.
+- [x] `contextSearch`: use AI queries when available; otherwise use deterministic queries built from Mood, time bucket, weather condition, language, and genre.
+- [x] `sameDimensions`: run artist, lyricist, composer, language, genre, and language-plus-genre paths with the priority order defined in the design.
+- [x] `aiExpansion`: accept only AI-suggested artist names or search phrases; resolve every one through `/search`.
+- [x] `publicFallback`: call `/recommend/songs` and `/personalized/newsong` only when primary lanes produce fewer than 12 playable candidates or when favorites are empty.
+- [x] Merge duplicates by track ID and retain a set of all provenance paths.
+- [x] Never mark a dimension match unless the corresponding metadata verification succeeded.
+- [x] Cap the raw candidate pool at 80 tracks.
+- [x] Test source quotas, duplicate merging, cold start, and fallback activation.
+- [x] Commit with `feat: collect recommendations from four primary lanes`.
 
 ### Task 2.5: Enforce anonymous playability globally
 
@@ -424,24 +424,24 @@ AI artist/song expansion lane          20%
 - Consumes: Raw candidates and `/song/url/v1`.
 - Produces: `VerifiedCandidate[]` where every item has a non-empty URL and verification timestamp.
 
-- [ ] Resolve URLs in batches of 10–20.
-- [ ] Remove every candidate with `url === null`, empty URL, unsupported media type, or malformed response.
-- [ ] Keep a maximum candidate count of 40 after playability filtering.
-- [ ] Revalidate the final selected tracks immediately before writing the batch.
-- [ ] Revalidate again when playback starts.
-- [ ] Exclude every unplayable item from NOW, Mood, DISCOVER, seed results, cached results, and queue data.
-- [ ] When fewer than three verified tracks remain, continue the relevant source lanes until three are available.
-- [ ] Test empty URL, mixed URLs, all-null URLs, and URL-expiry fallback.
-- [ ] Commit with `feat: require anonymous playback for all recommendations`.
+- [x] Resolve URLs in batches of 10–20.
+- [x] Remove every candidate with `url === null`, empty URL, unsupported media type, or malformed response.
+- [x] Keep a maximum candidate count of 40 after playability filtering.
+- [x] Revalidate the final selected tracks immediately before writing the batch.
+- [x] Revalidate again when playback starts.
+- [x] Exclude every unplayable item from NOW, Mood, DISCOVER, seed results, cached results, and queue data.
+- [x] When fewer than three verified tracks remain, continue the relevant source lanes until three are available.
+- [x] Test empty URL, mixed URLs, all-null URLs, and URL-expiry fallback.
+- [x] Commit with `feat: require anonymous playback for all recommendations`.
 
 **Phase 2 acceptance:**
 
-- [ ] Favorite controls persist locally and appear in both required surfaces.
-- [ ] The anonymous adapter handles every provider endpoint used by the app.
-- [ ] Same-creator and same-tag claims require metadata verification.
-- [ ] All candidate lanes produce typed provenance.
-- [ ] No unplayable track can enter a recommendation result.
-- [ ] Provider fixtures and smoke tests pass.
+- [x] Favorite controls persist locally and appear in both required surfaces.
+- [x] The anonymous adapter handles every provider endpoint used by the app.
+- [x] Same-creator and same-tag claims require metadata verification.
+- [x] All candidate lanes produce typed provenance.
+- [x] No unplayable track can enter a recommendation result.
+- [x] Provider fixtures and smoke tests pass.
 
 ---
 

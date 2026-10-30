@@ -2,11 +2,10 @@
 
 Context-aware music recommendations built around the right music for the right moment.
 
-The repository currently contains the finalized visual baseline and Phase 1
-of the local-first recommendation foundation. Recommendation, Discover, and
-playback content still use explicit mock data. Settings, anonymous provider
-connection checks, local contracts, and IndexedDB persistence are implemented;
-recommendation retrieval and generation begin in Phase 2.
+The repository contains the finalized visual baseline, the local-first
+foundation, and the verified anonymous candidate retrieval layer. NOW
+ranking, Discover generation, and synchronized lyrics remain mock-backed until
+Phase 3.
 
 ## Run
 
@@ -30,12 +29,18 @@ Additional checks:
 ```bash
 pnpm test:e2e
 pnpm provider:smoke
+RESONARA_AI_API_KEY=your-key pnpm ai:smoke
 ```
 
 The Settings panel is opened from the gear in the NOW card. Its values,
 favorites, caches, and future recommendation state are stored locally in
 IndexedDB. AI keys must be entered in the app and must never be placed in Vite
 or Tauri build variables.
+
+For a DeepSeek compatibility check, set `RESONARA_AI_API_KEY` only in the
+process environment. The smoke script defaults to
+`https://api.deepseek.com` and `deepseek-flash`; override them with
+`RESONARA_AI_BASE_URL` and `RESONARA_AI_MODEL` when needed.
 
 ## Product scope
 
