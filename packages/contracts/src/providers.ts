@@ -7,8 +7,11 @@ import {
 
 export const candidateSchema = z.object({
   track: trackSchema,
-  source: candidateSourceSchema,
-  seedTrackId: z.string().min(1).nullable(),
+  sources: z.array(candidateSourceSchema).min(1),
+  seedTrackIds: z.array(z.string().min(1)),
+  matchedDimensions: z.array(
+    z.enum(["artist", "lyricist", "composer", "language", "genre"]),
+  ),
   rawScore: z.number().finite().nullable(),
 });
 

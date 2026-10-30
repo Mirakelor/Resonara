@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   appSettingsSchema,
+  candidateSchema,
   createAIRerankerResultSchema,
   discoverEditionSchema,
   favoriteRecordSchema,
@@ -160,5 +161,21 @@ describe("local app contracts", () => {
       }).artistIds,
     ).toEqual(["49392892"]);
     expect(trackSchema.parse(track).artistIds).toEqual([]);
+  });
+
+  it("retains every provenance path when duplicate candidates are merged", () => {
+    const candidate = candidateSchema.parse({
+      track: { ...track, artistIds: ["49392892"] },
+      sources: ["favorite_similarity", "same_artist"],
+      seedTrackIds: ["seed-1"],
+      matchedDimensions: ["artist"],
+      rawScore: null,
+    });
+
+    expect(candidate.sources).toEqual([
+      "favorite_similarity",
+      "same_artist",
+    ]);
+    expect(candidate.matchedDimensions).toEqual(["artist"]);
   });
 });
