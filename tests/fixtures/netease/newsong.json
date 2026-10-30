@@ -1,0 +1,21 @@
+{
+  "code": 200,
+  "result": [
+    {
+      "id": 3451531276,
+      "name": "一张相片",
+      "picUrl": "https://p1.music.126.net/Eafh2qRUgw2IXXOVD4B9LQ==/109951174139932904.jpg",
+      "song": {
+        "id": 3451531276,
+        "name": "一张相片",
+        "artists": [{ "id": 12064019, "name": "连麻Swimming" }],
+        "album": {
+          "id": 404975764,
+          "name": "斩鸭线",
+          "picUrl": "https://p3.music.126.net/Eafh2qRUgw2IXXOVD4B9LQ==/109951174139932904.jpg"
+        },
+        "duration": 224842
+      }
+    }
+  ]
+}

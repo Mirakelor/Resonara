@@ -1,0 +1,23 @@
+{
+  "code": 200,
+  "data": [
+    {
+      "id": 1,
+      "url": "https://audio.example.test/one.mp3",
+      "br": 128000,
+      "expi": 1200,
+      "type": "mp3",
+      "code": 200
+    },
+    { "id": 2, "url": null, "br": 0, "expi": 1200, "type": null, "code": 404 },
+    { "id": 3, "url": "", "br": 0, "expi": 1200, "type": null, "code": 404 },
+    {
+      "id": 4,
+      "url": "https://audio.example.test/four.m4a",
+      "br": 192000,
+      "expi": 600,
+      "type": "m4a",
+      "code": 200
+    }
+  ]
+}

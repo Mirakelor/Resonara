@@ -1,0 +1,28 @@
+{
+  "code": 200,
+  "data": {
+    "blocks": [
+      {
+        "creatives": [
+          {
+            "creativeType": "songTag",
+            "uiElement": { "mainTitle": { "title": "曲风" } },
+            "resources": [
+              { "uiElement": { "mainTitle": { "title": "电子" } } }
+            ]
+          },
+          {
+            "creativeType": "language",
+            "uiElement": { "textLinks": [{ "text": "纯音乐" }] },
+            "resources": []
+          },
+          {
+            "creativeType": "bpm",
+            "uiElement": { "textLinks": [{ "text": "89" }] },
+            "resources": []
+          }
+        ]
+      }
+    ]
+  }
+}

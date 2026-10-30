@@ -1,0 +1,18 @@
+{
+  "code": 200,
+  "data": {
+    "dailySongs": [
+      {
+        "id": 277302,
+        "name": "爱",
+        "ar": [{ "id": 8926, "name": "莫文蔚" }],
+        "al": {
+          "id": 27534,
+          "name": "[i]",
+          "picUrl": "https://p4.music.126.net/lcVse6HbM4eSlOLN97fvZA==/109951166556887560.jpg"
+        },
+        "dt": 198333
+      }
+    ]
+  }
+}

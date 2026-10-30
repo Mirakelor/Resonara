@@ -1,0 +1,43 @@
+{
+  "code": 200,
+  "result": {
+    "songCount": 5,
+    "songs": [
+      {
+        "id": 1959438783,
+        "name": "Tremolo",
+        "artists": [{ "id": 49392892, "name": "Chilli Beans." }],
+        "album": { "id": 147150905, "name": "Chilli Beans." },
+        "duration": 187977
+      },
+      {
+        "id": 2070028674,
+        "name": "Raise - anime edit",
+        "artists": [{ "id": 49392892, "name": "Chilli Beans." }],
+        "album": { "id": 170088270, "name": "for you" },
+        "duration": 214943
+      },
+      {
+        "id": 3339193480,
+        "name": "star flower",
+        "artists": [{ "id": 49392892, "name": "Chilli Beans." }],
+        "album": { "id": 170088271, "name": "star flower" },
+        "duration": 201000
+      },
+      {
+        "id": 2089025936,
+        "name": "I like you",
+        "artists": [{ "id": 49392892, "name": "Chilli Beans." }],
+        "album": { "id": 170088272, "name": "I like you" },
+        "duration": 188000
+      },
+      {
+        "id": 29593078,
+        "name": "あるゆえ",
+        "artists": [{ "id": 20262, "name": "きのこ帝国" }],
+        "album": { "id": 3054015, "name": "フェイクワールドワンダーランド" },
+        "duration": 398706
+      }
+    ]
+  }
+}

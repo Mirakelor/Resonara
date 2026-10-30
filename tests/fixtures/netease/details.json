@@ -1,0 +1,27 @@
+{
+  "code": 200,
+  "songs": [
+    {
+      "id": 1959438783,
+      "name": "Tremolo",
+      "ar": [{ "id": 49392892, "name": "Chilli Beans." }],
+      "al": {
+        "id": 147150905,
+        "name": "Chilli Beans.",
+        "picUrl": "https://p3.music.126.net/L8f07BDPoT_tAHqmTUgP5A==/109951167596576841.jpg"
+      },
+      "dt": 187977
+    },
+    {
+      "id": 3451233414,
+      "name": "madeleine",
+      "ar": [{ "id": 123, "name": "brakence" }],
+      "al": {
+        "id": 456,
+        "name": "marroW",
+        "picUrl": "https://p3.music.126.net/Y2lzBSno1hqVrQH34X9-Cg==/109951174137925091.jpg"
+      },
+      "dt": 201000
+    }
+  ]
+}

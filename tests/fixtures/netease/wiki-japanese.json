@@ -1,0 +1,30 @@
+{
+  "code": 200,
+  "data": {
+    "blocks": [
+      {
+        "creatives": [
+          {
+            "creativeType": "songTag",
+            "uiElement": { "mainTitle": { "title": "曲风" } },
+            "resources": [
+              { "uiElement": { "mainTitle": { "title": "流行-日本流行" } } }
+            ]
+          },
+          {
+            "creativeType": "songBizTag",
+            "uiElement": { "mainTitle": { "title": "推荐标签" } },
+            "resources": [
+              { "uiElement": { "mainTitle": { "title": "活力" } } }
+            ]
+          },
+          {
+            "creativeType": "language",
+            "uiElement": { "textLinks": [{ "text": "日语" }] },
+            "resources": []
+          }
+        ]
+      }
+    ]
+  }
+}

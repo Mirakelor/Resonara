@@ -1,0 +1,12 @@
+{
+  "code": 200,
+  "lrc": {
+    "version": 5,
+    "lyric": "{\"t\":0,\"c\":[{\"tx\":\"作词: \"},{\"tx\":\"大九_LN / 人锦Renjin\"}]}\n{\"t\":1000,\"c\":[{\"tx\":\"作曲: \"},{\"tx\":\"胡臻koshin / 人锦Renjin\"}]}\n[00:03.58]第一行\n[00:07.41]Second line\n"
+  },
+  "tlyric": { "version": 2, "lyric": "[00:03.58]Translation one\n[00:07.41]Translation two\n" },
+  "yrc": { "version": 3, "lyric": "[3580,3830](3580,1000,0)第(4580,1000,0)一(5580,1000,0)行\n" },
+  "ytlrc": { "version": 2, "lyric": "[00:03.580]Translation one\n" },
+  "offset": 80,
+  "lyricUser": { "nickname": "Contributor" }
+}

@@ -1,0 +1,23 @@
+{
+  "code": 200,
+  "data": {
+    "blocks": [
+      {
+        "creatives": [
+          {
+            "creativeType": "songTag",
+            "uiElement": { "mainTitle": { "title": "曲风" } },
+            "resources": [
+              { "uiElement": { "mainTitle": { "title": "另类/独立" } } }
+            ]
+          },
+          {
+            "creativeType": "language",
+            "uiElement": { "textLinks": [{ "text": "英语" }] },
+            "resources": []
+          }
+        ]
+      }
+    ]
+  }
+}

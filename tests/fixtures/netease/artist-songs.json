@@ -1,0 +1,27 @@
+{
+  "code": 200,
+  "songs": [
+    {
+      "id": 2069000026,
+      "name": "Raise",
+      "ar": [{ "id": 49392892, "name": "Chilli Beans." }],
+      "al": {
+        "id": 170088270,
+        "name": "for you",
+        "picUrl": "https://p3.music.126.net/8FNi1UpoRNV8WM9ZnpnCxQ==/109951168753329914.jpg"
+      },
+      "dt": 214943
+    },
+    {
+      "id": 2750091787,
+      "name": "that's all i can do",
+      "ar": [{ "id": 49392892, "name": "Chilli Beans." }],
+      "al": {
+        "id": 170088273,
+        "name": "that's all i can do",
+        "picUrl": "https://p3.music.126.net/dTesYzWiix0WXPHvmCSVoA==/109951172068555382.jpg"
+      },
+      "dt": 193000
+    }
+  ]
+}

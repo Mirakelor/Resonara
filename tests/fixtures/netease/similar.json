@@ -1,0 +1,27 @@
+{
+  "code": 200,
+  "songs": [
+    {
+      "id": 2070028674,
+      "name": "Raise - anime edit",
+      "artists": [{ "id": 49392892, "name": "Chilli Beans." }],
+      "album": {
+        "id": 170088270,
+        "name": "for you",
+        "picUrl": "https://p3.music.126.net/8FNi1UpoRNV8WM9ZnpnCxQ==/109951168753329914.jpg"
+      },
+      "duration": 214943
+    },
+    {
+      "id": 3339193480,
+      "name": "star flower",
+      "artists": [{ "id": 49392892, "name": "Chilli Beans." }],
+      "album": {
+        "id": 170088271,
+        "name": "star flower",
+        "picUrl": "https://p4.music.126.net/RzF69PxB-mD4MvggoyR9pQ==/109951172586696416.jpg"
+      },
+      "duration": 201000
+    }
+  ]
+}
