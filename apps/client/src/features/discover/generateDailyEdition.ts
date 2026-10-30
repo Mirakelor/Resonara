@@ -75,7 +75,7 @@ function fallbackCopy(
     cards: selected.map((candidate, index) => ({
       trackId: candidate.track.id,
       title: TITLE_TEMPLATES[index]!,
-      subtitle: `${candidate.track.genre} · verified anonymous playback`,
+      subtitle: `${candidate.track.genre !== "Unknown" ? candidate.track.genre : (candidate.track.album ?? "Song")} · verified anonymous playback`,
       contextLabel:
         context.weather?.condition.replaceAll("_", " ") ??
         "local listening moment",
@@ -128,7 +128,10 @@ export async function generateDailyEdition(
               trackId: track.id,
               title: track.title,
               artist: track.artist,
-              genre: track.genre,
+              genre:
+                track.genre !== "Unknown"
+                  ? track.genre
+                  : (track.album ?? "Song"),
               energyLabel: track.energyLabel,
             })),
             requiredOutput: {

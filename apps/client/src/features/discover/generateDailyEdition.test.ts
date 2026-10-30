@@ -117,6 +117,38 @@ describe("daily Discover edition", () => {
     );
   });
 
+  it("uses a verified album label when the provider has no genre tag", async () => {
+    const candidates = ["a", "b", "c", "d"].map((id) => {
+      const candidate = verified(id);
+      return {
+        ...candidate,
+        track: {
+          ...candidate.track,
+          genre: "Unknown",
+          album: `Album ${id}`,
+        },
+      };
+    });
+
+    const edition = await generateDailyEdition(
+      {
+        candidates,
+        settings,
+        context,
+        editionDate: "2026-10-30",
+        now: new Date("2026-10-30T15:00:00+08:00"),
+      },
+      { persist: vi.fn() },
+    );
+
+    expect(edition.cards.every(({ subtitle }) => !subtitle.includes("Unknown"))).toBe(
+      true,
+    );
+    expect(edition.cards.every(({ subtitle }) => subtitle.includes("Album"))).toBe(
+      true,
+    );
+  });
+
   it("reuses a stored edition for the same local day and timezone", async () => {
     const candidates = ["a", "b", "c", "d"].map((id) => verified(id));
     const edition = await generateDailyEdition(
