@@ -59,6 +59,75 @@ function trackFromRaw(raw: RawTrack, playable: boolean) {
   };
 }
 
+function energyFromBpm(bpm: number | null, fallback: number): number {
+  if (!bpm) return fallback;
+  return Math.max(0.1, Math.min(0.95, (bpm - 50) / 110));
+}
+
+function energyLabel(
+  bpm: number | null,
+  recommendationTags: string[],
+  energy: number,
+): string {
+  if (recommendationTags[0]) return recommendationTags[0];
+  if (bpm) {
+    if (bpm < 90) return "Calm";
+    if (bpm < 120) return "Mid-tempo";
+    return "Driving";
+  }
+  if (energy < 0.4) return "Calm";
+  if (energy < 0.7) return "Mid-tempo";
+  return "Driving";
+}
+
+async function hydrateSelectedMetadata(
+  items: RankedCandidate[],
+  provider: NeteaseProvider,
+): Promise<RankedCandidate[]> {
+  return Promise.all(
+    items.map(async (item) => {
+      try {
+        const enrichment = await provider.getWikiSummary(item.trackId);
+        const nextEnergy = energyFromBpm(
+          enrichment.bpm,
+          item.candidate.track.energy,
+        );
+        return {
+          ...item,
+          candidate: {
+            ...item.candidate,
+            track: {
+              ...item.candidate.track,
+              genre: enrichment.genreTags[0] ?? item.candidate.track.genre,
+              energy: nextEnergy,
+              energyLabel: energyLabel(
+                enrichment.bpm,
+                enrichment.recommendationTags,
+                nextEnergy,
+              ),
+            },
+          },
+        };
+      } catch {
+        const nextEnergy = item.candidate.track.energy;
+        return {
+          ...item,
+          candidate: {
+            ...item.candidate,
+            track: {
+              ...item.candidate.track,
+              energyLabel:
+                item.candidate.track.energyLabel === "Unrated"
+                  ? energyLabel(null, [], nextEnergy)
+                  : item.candidate.track.energyLabel,
+            },
+          },
+        };
+      }
+    }),
+  );
+}
+
 async function loadSeedCandidate(
   seedTrackId: string,
   provider: NeteaseProvider,
@@ -209,14 +278,18 @@ export async function generateRecommendationBatch(
     },
     input.settings,
   );
-  const selected = ensureSeedSelection(
+  const selectedWithSeed = ensureSeedSelection(
     reranked.items,
     verified,
     input.seedTrackId,
   );
-  if (selected.length !== 3) {
+  if (selectedWithSeed.length !== 3) {
     throw new Error("Exactly three playable recommendations could not be assembled.");
   }
+  const selected = await hydrateSelectedMetadata(
+    selectedWithSeed,
+    options.provider,
+  );
 
   const explanationCandidates = selected.map(({ candidate }) => candidate);
   const explanations = writeRecommendationExplanations({

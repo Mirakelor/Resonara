@@ -1,4 +1,12 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+  lazy,
+  Suspense,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import type {
   DiscoverCard,
   EnvironmentMode,
@@ -6,13 +14,11 @@ import type {
   Track,
 } from "@resonara/contracts";
 import { DiscoverGrid } from "./components/DiscoverGrid";
-import { ExpandedPlayer } from "./components/ExpandedPlayer";
 import { Icon } from "./components/Icon";
 import { MoodSelector } from "./components/MoodSelector";
 import { PlayerDock } from "./components/PlayerDock";
 import { TrackCard } from "./components/TrackCard";
 import { SettingsButton } from "./features/settings/SettingsButton";
-import { SettingsPanel } from "./features/settings/SettingsPanel";
 import { useListeningContext } from "./features/context/useListeningContext";
 import { useRecommendationBatch } from "./features/recommendations/useRecommendationBatch";
 import { useDailyDiscover } from "./features/discover/useDailyDiscover";
@@ -20,6 +26,17 @@ import { usePlayerController } from "./features/player/usePlayerController";
 import { useFeedback } from "./features/profile/useFeedback";
 import { intentMeta } from "./data/intents";
 import "./styles/app.css";
+
+const ExpandedPlayer = lazy(() =>
+  import("./components/ExpandedPlayer").then((module) => ({
+    default: module.ExpandedPlayer,
+  })),
+);
+const SettingsPanel = lazy(() =>
+  import("./features/settings/SettingsPanel").then((module) => ({
+    default: module.SettingsPanel,
+  })),
+);
 
 function scrollToId(id: string) {
   document.getElementById(id)?.scrollIntoView({
@@ -284,6 +301,9 @@ export function App() {
               <img
                 src={featuredTrack.coverUrl}
                 alt={`${featuredTrack.title} album cover`}
+                loading="eager"
+                decoding="async"
+                fetchPriority="high"
               />
             ) : (
               <div className="now-cover__placeholder">
@@ -397,6 +417,7 @@ export function App() {
             <DiscoverGrid
               edition={dailyDiscover}
               onSelect={selectDiscoverCard}
+              disabled={recommendationLoading || contextLoading}
             />
           ) : (
             <div className="discover-grid discover-grid--loading" role="status">
@@ -417,35 +438,42 @@ export function App() {
         />
       ) : null}
 
-      {currentTrack ? <ExpandedPlayer
-        currentTrack={currentTrack}
-        tracks={batch?.items ?? []}
-        open={playerOpen}
-        isPlaying={player.isPlaying}
-        progress={player.progress}
-        currentTime={player.currentTime}
-        duration={player.duration}
-        lyrics={player.lyrics}
-        lyricTranslations={player.lyricTranslations}
-        activeLyricIndex={player.activeLyricIndex}
-        hasLyrics={player.hasLyrics}
-        lyricsOpen={player.lyricsOpen}
-        muted={player.muted}
-        onClose={() => setPlayerOpen(false)}
-        onTogglePlayback={player.toggle}
-        onSelect={playTrack}
-        onNext={skipNext}
-        onPrevious={player.previous}
-        onRestart={player.restart}
-        onSeek={player.seek}
-        onToggleLyrics={player.toggleLyrics}
-        onToggleMute={player.toggleMute}
-      /> : null}
+      {currentTrack && playerOpen ? (
+        <Suspense fallback={null}>
+          <ExpandedPlayer
+            currentTrack={currentTrack}
+            tracks={batch?.items ?? []}
+            open={playerOpen}
+            isPlaying={player.isPlaying}
+            progress={player.progress}
+            currentTime={player.currentTime}
+            duration={player.duration}
+            lyrics={player.lyrics}
+            lyricTranslations={player.lyricTranslations}
+            activeLyricIndex={player.activeLyricIndex}
+            hasLyrics={player.hasLyrics}
+            lyricsOpen={player.lyricsOpen}
+            muted={player.muted}
+            volume={player.volume}
+            onClose={() => setPlayerOpen(false)}
+            onTogglePlayback={player.toggle}
+            onSelect={playTrack}
+            onNext={skipNext}
+            onPrevious={player.previous}
+            onRestart={player.restart}
+            onSeek={player.seek}
+            onToggleLyrics={player.toggleLyrics}
+            onToggleMute={player.toggleMute}
+            onVolumeChange={player.setVolume}
+          />
+        </Suspense>
+      ) : null}
 
-      <SettingsPanel
-        open={settingsOpen}
-        onClose={() => setSettingsOpen(false)}
-      />
+      {settingsOpen ? (
+        <Suspense fallback={null}>
+          <SettingsPanel open onClose={() => setSettingsOpen(false)} />
+        </Suspense>
+      ) : null}
 
       <div
         className={`notice ${notice ? "notice--visible" : ""}`}

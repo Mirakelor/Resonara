@@ -177,6 +177,33 @@ describe("player controller", () => {
     expect(result.current.lyrics).toBeNull();
   });
 
+  it("keeps lyrics hidden by default and opens them on request", async () => {
+    const { result } = renderHook(() =>
+      usePlayerController({
+        queue: [tracks[0]!],
+        engine: new FakeAudioEngine(),
+        resolvePlaybackUrl: vi
+          .fn()
+          .mockResolvedValue("https://audio.example.test/a.mp3"),
+        loadLyrics: vi.fn().mockResolvedValue({
+          originalLrc: "[00:01.00]First\n[00:02.00]Second",
+          translationLrc: null,
+          richLyrics: null,
+          offsetMs: 0,
+          hasLyrics: true,
+          credits: { lyricists: [], composers: [], arrangers: [] },
+        }),
+      }),
+    );
+
+    await act(() => result.current.playTrack(tracks[0]!));
+    await waitFor(() => expect(result.current.hasLyrics).toBe(true));
+
+    expect(result.current.lyricsOpen).toBe(false);
+    act(() => result.current.toggleLyrics());
+    expect(result.current.lyricsOpen).toBe(true);
+  });
+
   it("notifies and advances to the next track when playback fails", async () => {
     const engine = new FakeAudioEngine();
     const onNotice = vi.fn();
@@ -203,5 +230,27 @@ describe("player controller", () => {
     await waitFor(() => expect(result.current.currentTrack?.id).toBe("b"));
     expect(onNotice).toHaveBeenCalled();
     expect(engine.loadedUrl).toContain("b.mp3");
+  });
+
+  it("adjusts and preserves volume when muting and unmuting", () => {
+    const engine = new FakeAudioEngine();
+    const { result } = renderHook(() =>
+      usePlayerController({
+        queue: tracks,
+        engine,
+        resolvePlaybackUrl: vi.fn(),
+        loadLyrics: vi.fn(),
+      }),
+    );
+
+    act(() => result.current.setVolume(0.35));
+    expect(engine.volume).toBe(0.35);
+    expect(result.current.volume).toBe(0.35);
+
+    act(() => result.current.toggleMute());
+    expect(engine.volume).toBe(0);
+
+    act(() => result.current.toggleMute());
+    expect(engine.volume).toBe(0.35);
   });
 });

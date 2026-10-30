@@ -10,14 +10,22 @@ type TrackCardProps = {
 export function TrackCard({ item, onPlay }: TrackCardProps) {
   const { track } = item;
   const { isFavorite, toggleFavorite } = useFavorite(track);
+  const category =
+    track.genre !== "Unknown" ? track.genre : (track.album ?? "Song");
 
   return (
     <article className="track-card">
-      <img className="track-card__cover" src={track.coverUrl} alt="" />
+      <img
+        className="track-card__cover"
+        src={track.coverUrl}
+        alt=""
+        loading="lazy"
+        decoding="async"
+      />
       <div className="track-card__body">
         <h3>{track.title}</h3>
         <p className="track-card__meta">
-          {track.artist} · {track.genre} · {track.energyLabel}
+          {track.artist} · {category} · {track.energyLabel}
         </p>
       </div>
       <button

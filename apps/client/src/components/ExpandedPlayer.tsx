@@ -1,11 +1,17 @@
+import { lazy, Suspense } from "react";
 import type { RecommendationItem, Track } from "@resonara/contracts";
 import { useFavorite } from "../features/favorites/useFavorite";
-import { LyricsPanel } from "../features/player/LyricsPanel";
 import type {
   LyricLine,
   TranslationMap,
 } from "../features/player/lyrics";
 import { Icon } from "./Icon";
+
+const LyricsPanel = lazy(() =>
+  import("../features/player/LyricsPanel").then((module) => ({
+    default: module.LyricsPanel,
+  })),
+);
 
 type ExpandedPlayerProps = {
   currentTrack: Track;
@@ -21,6 +27,7 @@ type ExpandedPlayerProps = {
   hasLyrics: boolean;
   lyricsOpen: boolean;
   muted: boolean;
+  volume: number;
   onClose: () => void;
   onTogglePlayback: () => void;
   onSelect: (track: Track) => void;
@@ -30,6 +37,7 @@ type ExpandedPlayerProps = {
   onSeek: (seconds: number) => void;
   onToggleLyrics: () => void;
   onToggleMute: () => void;
+  onVolumeChange: (volume: number) => void;
 };
 
 export function ExpandedPlayer({
@@ -46,6 +54,7 @@ export function ExpandedPlayer({
   hasLyrics,
   lyricsOpen,
   muted,
+  volume,
   onClose,
   onTogglePlayback,
   onSelect,
@@ -55,6 +64,7 @@ export function ExpandedPlayer({
   onSeek,
   onToggleLyrics,
   onToggleMute,
+  onVolumeChange,
 }: ExpandedPlayerProps) {
   const { isFavorite, toggleFavorite } = useFavorite(currentTrack);
 
@@ -67,7 +77,7 @@ export function ExpandedPlayer({
       }}
     >
       <aside
-        className={`expanded-player ${open ? "expanded-player--open" : ""}`}
+        className={`expanded-player ${open ? "expanded-player--open" : ""} ${hasLyrics && lyricsOpen ? "expanded-player--lyrics" : ""}`}
         aria-label="Music player"
         aria-modal="true"
         role="dialog"
@@ -96,11 +106,23 @@ export function ExpandedPlayer({
           </div>
         </header>
 
-        <figure className="expanded-player__cover">
-          <img
-            src={currentTrack.coverUrl}
-            alt={`${currentTrack.title} album cover`}
-          />
+        <figure
+          className={`expanded-player__cover ${hasLyrics && lyricsOpen ? "expanded-player__cover--lyrics" : ""}`}
+        >
+          {hasLyrics && lyricsOpen && lyrics && lyricTranslations ? (
+            <Suspense fallback={null}>
+              <LyricsPanel
+                lines={lyrics}
+                translations={lyricTranslations}
+                activeIndex={activeLyricIndex}
+              />
+            </Suspense>
+          ) : (
+            <img
+              src={currentTrack.coverUrl}
+              alt={`${currentTrack.title} album cover`}
+            />
+          )}
         </figure>
 
         <div className="expanded-player__song">
@@ -126,7 +148,11 @@ export function ExpandedPlayer({
             </div>
             <p>{currentTrack.artist}</p>
           </div>
-          <span>{currentTrack.genre}</span>
+          <span>
+            {currentTrack.genre !== "Unknown"
+              ? currentTrack.genre
+              : (currentTrack.album ?? "Song")}
+          </span>
         </div>
 
         <input
@@ -161,22 +187,27 @@ export function ExpandedPlayer({
           <button type="button" onClick={onNext} aria-label="Next track">
             <Icon name="next" size={19} />
           </button>
-          <button
-            type="button"
-            aria-label={muted ? "Unmute" : "Mute"}
-            onClick={onToggleMute}
-          >
-            <Icon name="volume" size={19} />
-          </button>
+          <div className="expanded-volume">
+            <input
+              type="range"
+              min="0"
+              max="1"
+              step="0.01"
+              value={volume}
+              aria-label="Volume"
+              onChange={(event) =>
+                onVolumeChange(Number(event.target.value))
+              }
+            />
+            <button
+              type="button"
+              aria-label={muted ? "Unmute" : "Mute"}
+              onClick={onToggleMute}
+            >
+              <Icon name="volume" size={19} />
+            </button>
+          </div>
         </div>
-
-        {hasLyrics && lyricsOpen && lyrics && lyricTranslations ? (
-          <LyricsPanel
-            lines={lyrics}
-            translations={lyricTranslations}
-            activeIndex={activeLyricIndex}
-          />
-        ) : null}
 
         <section className="player-queue" aria-labelledby="queue-title">
           <div className="player-queue__header">
@@ -202,7 +233,12 @@ export function ExpandedPlayer({
                         String(rank).padStart(2, "0")
                       )}
                     </span>
-                    <img src={track.coverUrl} alt="" />
+                    <img
+                      src={track.coverUrl}
+                      alt=""
+                      loading="lazy"
+                      decoding="async"
+                    />
                     <span className="queue-item__copy">
                       <strong>{track.title}</strong>
                       <small>{track.artist}</small>

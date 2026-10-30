@@ -90,8 +90,9 @@ export function usePlayerController({
   const [lyrics, setLyrics] = useState<ReturnType<
     typeof parseLyricsResponse
   > | null>(null);
-  const [lyricsOpen, setLyricsOpen] = useState(true);
-  const [muted, setMuted] = useState(false);
+  const [lyricsOpen, setLyricsOpen] = useState(false);
+  const [volume, setVolumeState] = useState(engine.volume);
+  const lastAudibleVolume = useRef(engine.volume || 1);
   const requestId = useRef(0);
   const preResolved = useRef(new Map<string, string>());
   const loadedTrackId = useRef<string | null>(null);
@@ -134,7 +135,6 @@ export function usePlayerController({
         if (!response) return;
         const parsed = parseLyricsResponse(response);
         setLyrics(parsed.hasLyrics ? parsed : null);
-        setLyricsOpen(response.hasLyrics);
       } catch {
         setLyrics(null);
       }
@@ -153,6 +153,7 @@ export function usePlayerController({
         setCurrentTime(0);
         setDuration(0);
         setLyrics(null);
+        setLyricsOpen(false);
         void loadTrackLyrics(candidate.id);
 
         const advance = async () => {
@@ -261,18 +262,18 @@ export function usePlayerController({
   );
 
   const setVolume = useCallback(
-    (volume: number) => {
-      engine.setVolume(volume);
-      setMuted(volume === 0);
+    (nextVolume: number) => {
+      const clamped = Math.max(0, Math.min(1, nextVolume));
+      engine.setVolume(clamped);
+      setVolumeState(clamped);
+      if (clamped > 0) lastAudibleVolume.current = clamped;
     },
     [engine],
   );
 
   const toggleMute = useCallback(() => {
-    const nextMuted = !muted;
-    engine.setVolume(nextMuted ? 0 : 1);
-    setMuted(nextMuted);
-  }, [engine, muted]);
+    setVolume(volume > 0 ? 0 : lastAudibleVolume.current || 1);
+  }, [setVolume, volume]);
 
   const selectTrack = useCallback(
     (trackId: string) => {
@@ -304,7 +305,8 @@ export function usePlayerController({
     activeLyricIndex,
     hasLyrics: Boolean(lyrics?.hasLyrics && lyrics.lines.length > 0),
     lyricsOpen,
-    muted,
+    volume,
+    muted: volume === 0,
     playTrack,
     toggle,
     next,

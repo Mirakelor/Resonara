@@ -64,6 +64,7 @@ vi.mock("../player/usePlayerController", async () => {
       hasLyrics: false,
       lyricsOpen: false,
       muted: false,
+      volume: 1,
       playTrack: vi.fn(),
       toggle: vi.fn(),
       next: vi.fn(),
@@ -72,6 +73,7 @@ vi.mock("../player/usePlayerController", async () => {
       seek: vi.fn(),
       selectTrack: vi.fn(),
       toggleMute: vi.fn(),
+      setVolume: vi.fn(),
       toggleLyrics: vi.fn(),
     }),
   };
@@ -105,10 +107,17 @@ describe("favorite controls", () => {
 
   it("updates the recommendation row and player surface together", async () => {
     const user = userEvent.setup();
-    expect(favoriteButtons()).toHaveLength(2);
+    expect(favoriteButtons()).toHaveLength(1);
 
     await user.click(favoriteButtons()[0]!);
 
+    await waitFor(() => {
+      expect(
+        screen.getAllByLabelText("Remove Undefined from favorites"),
+      ).toHaveLength(1);
+    });
+
+    await user.click(screen.getByRole("button", { name: "Play Undefined" }));
     await waitFor(() => {
       expect(
         screen.getAllByLabelText("Remove Undefined from favorites"),
@@ -143,7 +152,7 @@ describe("favorite controls", () => {
     await waitFor(() => {
       expect(
         screen.getAllByLabelText("Remove Undefined from favorites"),
-      ).toHaveLength(2);
+      ).toHaveLength(1);
     });
   });
 
@@ -153,7 +162,7 @@ describe("favorite controls", () => {
     await waitFor(() => {
       expect(
         screen.getAllByLabelText("Remove Undefined from favorites"),
-      ).toHaveLength(2);
+      ).toHaveLength(1);
     });
 
     await user.click(
@@ -178,7 +187,7 @@ describe("favorite controls", () => {
     await waitFor(() => {
       expect(
         screen.getAllByLabelText("Save Undefined to favorites"),
-      ).toHaveLength(2);
+      ).toHaveLength(1);
     });
   });
 });

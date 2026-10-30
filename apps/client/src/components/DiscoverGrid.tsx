@@ -4,11 +4,13 @@ import { Icon } from "./Icon";
 type DiscoverGridProps = {
   edition: DiscoverEdition;
   onSelect: (card: DiscoverCard) => void;
+  disabled?: boolean;
 };
 
 export function DiscoverGrid({
   edition,
   onSelect,
+  disabled = false,
 }: DiscoverGridProps) {
   return (
     <div className="discover-grid">
@@ -18,8 +20,14 @@ export function DiscoverGrid({
           type="button"
           key={card.id}
           onClick={() => onSelect(card)}
+          disabled={disabled}
         >
-          <img src={card.coverUrl} alt="" />
+          <img
+            src={card.coverUrl}
+            alt=""
+            loading="lazy"
+            decoding="async"
+          />
           <span className="discover-card__veil" />
           <span className="discover-card__top">
             <Icon name="arrow-up-right" size={20} />

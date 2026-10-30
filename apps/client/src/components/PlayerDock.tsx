@@ -28,7 +28,12 @@ export function PlayerDock({
         onClick={onOpen}
         aria-label="Expand player"
       >
-        <img src={track.coverUrl} alt="" />
+        <img
+          src={track.coverUrl}
+          alt=""
+          loading="lazy"
+          decoding="async"
+        />
         <span>
           <strong>{track.title}</strong>
           <small>{track.artist}</small>

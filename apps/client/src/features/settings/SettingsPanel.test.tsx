@@ -66,6 +66,7 @@ vi.mock("../player/usePlayerController", async () => {
       hasLyrics: false,
       lyricsOpen: false,
       muted: false,
+      volume: 1,
       playTrack: vi.fn(),
       toggle: vi.fn(),
       next: vi.fn(),
@@ -74,6 +75,7 @@ vi.mock("../player/usePlayerController", async () => {
       seek: vi.fn(),
       selectTrack: vi.fn(),
       toggleMute: vi.fn(),
+      setVolume: vi.fn(),
       toggleLyrics: vi.fn(),
     }),
   };

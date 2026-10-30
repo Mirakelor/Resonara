@@ -164,6 +164,12 @@ describe("final recommendation assembly", () => {
 
     expect(batch.items).toHaveLength(3);
     expect(batch.items.every(({ track }) => track.playable)).toBe(true);
+    expect(
+      batch.items.every(({ track }) => track.genre !== "Unknown"),
+    ).toBe(true);
+    expect(
+      batch.items.every(({ track }) => track.energyLabel !== "Unrated"),
+    ).toBe(true);
     expect(batch.featuredTrackId).toBe(batch.items[0]?.track.id);
   });
 
