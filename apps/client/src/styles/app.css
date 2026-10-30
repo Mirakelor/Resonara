@@ -775,6 +775,11 @@
   border-color: #ead2c8;
 }
 
+.expanded-player__lyrics-toggle:disabled {
+  cursor: default;
+  opacity: 0.42;
+}
+
 .expanded-player__header .eyebrow {
   color: var(--color-accent);
 }
@@ -936,11 +941,24 @@
 }
 
 .expanded-volume input {
-  width: clamp(2.8rem, 8vw, 4.5rem);
+  width: 0;
   height: 3px;
   padding: 0;
+  opacity: 0;
+  pointer-events: none;
   accent-color: var(--color-accent);
   cursor: pointer;
+  transition:
+    width 180ms var(--ease-out),
+    opacity 140ms ease;
+}
+
+.expanded-volume:hover input,
+.expanded-volume:focus-within input,
+.expanded-volume--open input {
+  width: clamp(2.8rem, 8vw, 4.5rem);
+  opacity: 1;
+  pointer-events: auto;
 }
 
 .expanded-player--lyrics .player-queue {

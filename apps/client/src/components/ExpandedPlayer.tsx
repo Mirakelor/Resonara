@@ -1,4 +1,4 @@
-import { lazy, Suspense } from "react";
+import { lazy, Suspense, useState } from "react";
 import type { RecommendationItem, Track } from "@resonara/contracts";
 import { useFavorite } from "../features/favorites/useFavorite";
 import type {
@@ -36,7 +36,6 @@ type ExpandedPlayerProps = {
   onRestart: () => void;
   onSeek: (seconds: number) => void;
   onToggleLyrics: () => void;
-  onToggleMute: () => void;
   onVolumeChange: (volume: number) => void;
 };
 
@@ -63,10 +62,13 @@ export function ExpandedPlayer({
   onRestart,
   onSeek,
   onToggleLyrics,
-  onToggleMute,
   onVolumeChange,
 }: ExpandedPlayerProps) {
   const { isFavorite, toggleFavorite } = useFavorite(currentTrack);
+  const [volumeOpen, setVolumeOpen] = useState(false);
+  const usesHover = () =>
+    typeof window !== "undefined" &&
+    Boolean(window.matchMedia?.("(hover: hover)").matches);
 
   return (
     <div
@@ -85,16 +87,20 @@ export function ExpandedPlayer({
         <header className="expanded-player__header">
           <p className="eyebrow">Now Playing</p>
           <div className="expanded-player__header-actions">
-            {hasLyrics ? (
-              <button
-                type="button"
-                className="expanded-player__lyrics-toggle"
-                onClick={onToggleLyrics}
-                aria-pressed={lyricsOpen}
-              >
-                {lyricsOpen ? "Hide lyrics" : "Show lyrics"}
-              </button>
-            ) : null}
+            <button
+              type="button"
+              className="expanded-player__lyrics-toggle"
+              onClick={onToggleLyrics}
+              aria-pressed={hasLyrics ? lyricsOpen : false}
+              aria-label={hasLyrics ? undefined : "No lyrics"}
+              disabled={!hasLyrics}
+            >
+              {hasLyrics
+                ? lyricsOpen
+                  ? "Hide lyrics"
+                  : "Show lyrics"
+                : "No lyrics"}
+            </button>
             <button
               type="button"
               className="expanded-player__close"
@@ -187,7 +193,15 @@ export function ExpandedPlayer({
           <button type="button" onClick={onNext} aria-label="Next track">
             <Icon name="next" size={19} />
           </button>
-          <div className="expanded-volume">
+          <div
+            className={`expanded-volume ${volumeOpen ? "expanded-volume--open" : ""}`}
+            onPointerEnter={() => {
+              if (usesHover()) setVolumeOpen(true);
+            }}
+            onPointerLeave={() => {
+              if (usesHover()) setVolumeOpen(false);
+            }}
+          >
             <input
               type="range"
               min="0"
@@ -195,14 +209,26 @@ export function ExpandedPlayer({
               step="0.01"
               value={volume}
               aria-label="Volume"
+              aria-hidden={!volumeOpen}
+              tabIndex={volumeOpen ? 0 : -1}
               onChange={(event) =>
                 onVolumeChange(Number(event.target.value))
               }
             />
             <button
               type="button"
-              aria-label={muted ? "Unmute" : "Mute"}
-              onClick={onToggleMute}
+              aria-label="Show volume"
+              aria-expanded={volumeOpen}
+              title={muted ? "Volume muted" : "Volume"}
+              onClick={() => {
+                if (!usesHover()) setVolumeOpen((open) => !open);
+              }}
+              onFocus={() => {
+                if (usesHover()) setVolumeOpen(true);
+              }}
+              onBlur={() => {
+                if (usesHover()) setVolumeOpen(false);
+              }}
             >
               <Icon name="volume" size={19} />
             </button>

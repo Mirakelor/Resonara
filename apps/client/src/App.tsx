@@ -463,7 +463,6 @@ export function App() {
             onRestart={player.restart}
             onSeek={player.seek}
             onToggleLyrics={player.toggleLyrics}
-            onToggleMute={player.toggleMute}
             onVolumeChange={player.setVolume}
           />
         </Suspense>
