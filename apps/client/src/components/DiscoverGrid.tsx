@@ -3,13 +3,22 @@ import { Icon } from "./Icon";
 
 type DiscoverGridProps = {
   edition: DiscoverEdition;
+  playableTrackIds: ReadonlySet<string>;
   onSelect: (card: DiscoverCard) => void;
 };
 
-export function DiscoverGrid({ edition, onSelect }: DiscoverGridProps) {
+export function DiscoverGrid({
+  edition,
+  playableTrackIds,
+  onSelect,
+}: DiscoverGridProps) {
+  const cards = edition.cards.filter((card) =>
+    playableTrackIds.has(card.trackId),
+  );
+
   return (
     <div className="discover-grid">
-      {edition.cards.map((card) => (
+      {cards.map((card) => (
         <button
           className="discover-card"
           type="button"

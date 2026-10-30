@@ -64,6 +64,13 @@ export function App() {
     () => recommendationItems.map((item) => item.track),
     [],
   );
+  const playableTrackIds = useMemo(
+    () =>
+      new Set(
+        tracks.filter((track) => track.playable).map((track) => track.id),
+      ),
+    [tracks],
+  );
   const currentTrack = tracks[currentTrackIndex] ?? tracks[0]!;
 
   const showNotice = useCallback((message: string) => {
@@ -335,6 +342,7 @@ export function App() {
           </div>
           <DiscoverGrid
             edition={discoverEdition}
+            playableTrackIds={playableTrackIds}
             onSelect={selectDiscoverCard}
           />
         </section>

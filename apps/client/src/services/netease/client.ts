@@ -65,6 +65,7 @@ const playbackSchema = z.object({
         id: z.union([z.string(), z.number()]),
         url: z.string().nullable().optional(),
         expi: z.number().optional(),
+        type: z.string().nullable().optional(),
       })
       .passthrough(),
   ),
@@ -221,6 +222,7 @@ export function createNeteaseProvider(
             unavailableReason: url
               ? null
               : "No anonymous standard-quality URL was returned.",
+            mediaType: item.type ?? null,
           });
         }
       }

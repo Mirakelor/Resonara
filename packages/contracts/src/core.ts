@@ -176,6 +176,7 @@ export const playbackResolutionSchema = z.object({
   level: z.enum(["standard", "higher", "exhigh", "lossless"]),
   playable: z.boolean(),
   unavailableReason: z.string().nullable(),
+  mediaType: z.string().nullable().optional(),
 });
 
 export type CandidateSource = z.infer<typeof candidateSourceSchema>;

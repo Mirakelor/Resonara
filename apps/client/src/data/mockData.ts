@@ -34,7 +34,7 @@ export const tracks: Record<string, Track> = {
     energyLabel: "Melodic",
     energy: 0.64,
     durationMs: 213000,
-    playable: false,
+    playable: true,
   },
   hypnagogia: {
     id: "3360273109",
@@ -49,7 +49,7 @@ export const tracks: Record<string, Track> = {
     energyLabel: "Soft focus",
     energy: 0.38,
     durationMs: 260000,
-    playable: false,
+    playable: true,
   },
   madeleine: {
     id: "3451233414",
@@ -64,11 +64,11 @@ export const tracks: Record<string, Track> = {
     energyLabel: "Restless",
     energy: 0.72,
     durationMs: 201000,
-    playable: false,
+    playable: true,
   },
 };
 
-export const recommendationItems: RecommendationItem[] = [
+const recommendationItemSource: RecommendationItem[] = [
   {
     rank: 1,
     track: tracks.undefined!,
@@ -109,6 +109,10 @@ export const recommendationItems: RecommendationItem[] = [
     },
   },
 ];
+
+export const recommendationItems = recommendationItemSource.filter(
+  (item) => item.track.playable,
+);
 
 export const discoverEdition: DiscoverEdition = {
   editionDate: "2026-10-30",

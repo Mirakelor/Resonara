@@ -18,6 +18,8 @@ export function PlayerDock({
   onNext,
   onOpen,
 }: PlayerDockProps) {
+  if (!track.playable) return null;
+
   return (
     <aside className="player-dock" aria-label="Now playing">
       <button

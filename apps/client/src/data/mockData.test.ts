@@ -9,6 +9,7 @@ describe("recommendation visual baseline data", () => {
   it("keeps the NOW batch aligned with the designer's 3-card layout", () => {
     expect(recommendationItems).toHaveLength(3);
     expect(new Set(recommendationItems.map((item) => item.track.id)).size).toBe(3);
+    expect(recommendationItems.every((item) => item.track.playable)).toBe(true);
   });
 
   it("builds one daily discover edition from exactly four song covers", () => {
