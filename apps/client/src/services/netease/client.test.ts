@@ -63,6 +63,11 @@ describe("anonymous Netease adapter", () => {
     expect(fetchMock.mock.calls[0]?.[0]).toContain(
       "/search?keywords=Tremolo+Chilli+Beans&limit=5",
     );
+    expect(
+      new URL(String(fetchMock.mock.calls[0]?.[0])).searchParams.has(
+        "_resonara_ts",
+      ),
+    ).toBe(true);
   });
 
   it("loads track details with artist IDs and cover URLs", async () => {
@@ -163,7 +168,13 @@ describe("anonymous Netease adapter", () => {
     );
     await expect(provider.getPublicRecommendations()).resolves.toHaveLength(1);
     await expect(provider.getNewSongs(1)).resolves.toHaveLength(1);
-    expect(fetchMock.mock.calls.map(([url]) => String(url))).toEqual([
+    expect(
+      fetchMock.mock.calls.map(([url]) => {
+        const parsed = new URL(String(url));
+        parsed.searchParams.delete("_resonara_ts");
+        return `${parsed.origin}${parsed.pathname}${parsed.search}`;
+      }),
+    ).toEqual([
       "https://music.example.test/simi/song?id=1959438783&limit=2",
       "https://music.example.test/artist/songs?id=49392892&limit=2",
       "https://music.example.test/recommend/songs",

@@ -114,8 +114,15 @@ export function createNeteaseProvider(
     headers.Authorization = `Bearer ${settings.musicApiToken.trim()}`;
   }
 
-  const request = <T>(path: string, schema: z.ZodType<T>) =>
-    requestJson(`${baseUrl}${path}`, { headers }, schema);
+  let requestSequence = 0;
+  const request = <T>(path: string, schema: z.ZodType<T>) => {
+    const url = new URL(`${baseUrl}${path}`);
+    url.searchParams.set(
+      "_resonara_ts",
+      `${Date.now()}-${++requestSequence}`,
+    );
+    return requestJson(url.toString(), { headers }, schema);
+  };
 
   return {
     async searchTracks(query, limit) {
