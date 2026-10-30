@@ -59,6 +59,42 @@ function hasSupportedMedia(
   );
 }
 
+function usableResolution(
+  resolution: PlaybackResolution | undefined,
+  now: Date,
+): resolution is PlaybackResolution & { url: string } {
+  const url = resolution?.url?.trim() ?? "";
+  return Boolean(
+    resolution &&
+      url &&
+      resolution.playable &&
+      !isExpired(resolution, now) &&
+      hasSupportedMedia(url, resolution.mediaType),
+  );
+}
+
+export async function resolveFreshPlaybackUrl(
+  trackId: string,
+  provider: NeteaseProvider,
+  now = new Date(),
+): Promise<{ url: string; expiresAt: string | null } | null> {
+  let resolution = (await provider.resolvePlaybackUrls([trackId])).get(
+    trackId,
+  );
+
+  if (
+    resolution &&
+    resolution.url &&
+    isExpired(resolution, now)
+  ) {
+    resolution = (await provider.resolvePlaybackUrls([trackId])).get(trackId);
+  }
+
+  return usableResolution(resolution, now)
+    ? { url: resolution.url, expiresAt: resolution.expiresAt }
+    : null;
+}
+
 async function resolveCandidates(
   candidates: Candidate[],
   provider: NeteaseProvider,

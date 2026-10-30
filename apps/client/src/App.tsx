@@ -13,15 +13,15 @@ import { PlayerDock } from "./components/PlayerDock";
 import { TrackCard } from "./components/TrackCard";
 import { SettingsButton } from "./features/settings/SettingsButton";
 import { SettingsPanel } from "./features/settings/SettingsPanel";
+import { getSettings } from "./db/repositories/settings";
+import { resolveFreshPlaybackUrl } from "./recommendation/verifyPlayable";
+import { createNeteaseProvider } from "./services/netease/client";
 import {
   discoverEdition,
   intentMeta,
   recommendationItems,
 } from "./data/mockData";
 import "./styles/app.css";
-
-const fallbackAudioUrl =
-  "https://m801.music.126.net/20261030124005/5b4f45e37e4caac27300e13a0a29b6ea/jdymusic/obj/wo3DlMOGwrbDjj7DisKw/83772366009/3282/052c/1534/971229e37a441645d23adfaf83147e81.mp3";
 
 function scrollToId(id: string) {
   document.getElementById(id)?.scrollIntoView({
@@ -80,7 +80,7 @@ export function App() {
   }, []);
 
   const playTrack = useCallback(
-    (track: Track) => {
+    async (track: Track) => {
       const index = tracks.findIndex((candidate) => candidate.id === track.id);
       if (index >= 0) setCurrentTrackIndex(index);
       setShowPlayerDock(true);
@@ -94,16 +94,43 @@ export function App() {
 
       const audio = audioRef.current;
       if (!audio) return;
-      if (!audio.src) audio.src = fallbackAudioUrl;
-      void audio.play().then(
-        () => setIsPlaying(true),
-        () => showNotice("Playback was blocked. Press play again to continue."),
-      );
+
+      try {
+        const settings = await getSettings();
+        const playback = await resolveFreshPlaybackUrl(
+          track.id,
+          createNeteaseProvider(settings),
+        );
+        if (!playback) {
+          setIsPlaying(false);
+          showNotice(
+            "This track has no anonymous playback URL right now.",
+          );
+          return;
+        }
+
+        audio.src = playback.url;
+        audio.load();
+        try {
+          await audio.play();
+          setIsPlaying(true);
+        } catch {
+          setIsPlaying(false);
+          showNotice("Playback was blocked. Press play again to continue.");
+        }
+      } catch (error) {
+        setIsPlaying(false);
+        showNotice(
+          error instanceof Error
+            ? error.message
+            : "The playback URL could not be verified.",
+        );
+      }
     },
     [showNotice, tracks],
   );
 
-  const togglePlayback = useCallback(() => {
+  const togglePlayback = useCallback(async () => {
     const audio = audioRef.current;
     if (!audio) return;
 
@@ -112,7 +139,10 @@ export function App() {
       return;
     }
 
-    if (!audio.src) audio.src = fallbackAudioUrl;
+    if (!audio.src) {
+      await playTrack(currentTrack);
+      return;
+    }
     if (audio.paused) {
       void audio.play().then(
         () => setIsPlaying(true),
@@ -122,7 +152,7 @@ export function App() {
       audio.pause();
       setIsPlaying(false);
     }
-  }, [currentTrack.playable, showNotice]);
+  }, [currentTrack, playTrack, showNotice]);
 
   const goNext = useCallback(() => {
     const nextIndex = (currentTrackIndex + 1) % tracks.length;

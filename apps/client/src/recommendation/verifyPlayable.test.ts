@@ -3,6 +3,7 @@ import type { Candidate, PlaybackResolution } from "@resonara/contracts";
 import type { NeteaseProvider } from "../services/netease/client";
 import {
   revalidateVerifiedCandidates,
+  resolveFreshPlaybackUrl,
   verifyPlayableCandidates,
   type VerifiedCandidate,
 } from "./verifyPlayable";
@@ -227,5 +228,31 @@ describe("anonymous playability gate", () => {
     expect(revalidated[0]?.playbackUrl).toBe(
       "https://audio.example.test/fresh.mp3",
     );
+  });
+
+  it("resolves a fresh URL at playback start", async () => {
+    const provider = providerWithPlayback(
+      vi.fn().mockResolvedValue(
+        new Map([
+          ["1", resolution("1", "https://audio.example.test/play.mp3")],
+        ]),
+      ),
+    );
+
+    await expect(
+      resolveFreshPlaybackUrl("1", provider, now),
+    ).resolves.toMatchObject({
+      url: "https://audio.example.test/play.mp3",
+    });
+  });
+
+  it("blocks playback when the fresh URL is unavailable", async () => {
+    const provider = providerWithPlayback(
+      vi.fn().mockResolvedValue(new Map([["1", resolution("1", null)]])),
+    );
+
+    await expect(
+      resolveFreshPlaybackUrl("1", provider, now),
+    ).resolves.toBeNull();
   });
 });
