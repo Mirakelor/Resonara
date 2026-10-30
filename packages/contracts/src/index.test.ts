@@ -4,6 +4,7 @@ import {
   createAIRerankerResultSchema,
   discoverEditionSchema,
   favoriteRecordSchema,
+  feedbackEventSchema,
   recommendationBatchSchema,
   recommendationRequestSchema,
 } from "./index";
@@ -143,5 +144,10 @@ describe("local app contracts", () => {
         ],
       }),
     ).toThrow();
+  });
+
+  it("keeps favorite removal events distinct from dislikes", () => {
+    expect(feedbackEventSchema.parse("unliked")).toBe("unliked");
+    expect(feedbackEventSchema.parse("disliked")).toBe("disliked");
   });
 });

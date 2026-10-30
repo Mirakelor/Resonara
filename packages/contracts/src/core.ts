@@ -140,6 +140,7 @@ export const feedbackEventSchema = z.enum([
   "play_completed",
   "skipped_early",
   "liked",
+  "unliked",
   "disliked",
 ]);
 

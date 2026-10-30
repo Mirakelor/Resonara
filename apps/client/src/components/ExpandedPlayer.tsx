@@ -1,4 +1,5 @@
 import type { RecommendationItem, Track } from "@resonara/contracts";
+import { useFavorite } from "../features/favorites/useFavorite";
 import { Icon } from "./Icon";
 
 type ExpandedPlayerProps = {
@@ -28,6 +29,8 @@ export function ExpandedPlayer({
   onPrevious,
   onRestart,
 }: ExpandedPlayerProps) {
+  const { isFavorite, toggleFavorite } = useFavorite(currentTrack);
+
   return (
     <div
       className={`player-sheet-backdrop ${open ? "player-sheet-backdrop--open" : ""}`}
@@ -63,7 +66,25 @@ export function ExpandedPlayer({
 
         <div className="expanded-player__song">
           <div>
-            <h2>{currentTrack.title}</h2>
+            <div className="expanded-player__title-row">
+              <h2>{currentTrack.title}</h2>
+              <button
+                className={`favorite-button expanded-player__favorite ${isFavorite ? "favorite-button--active" : ""}`}
+                type="button"
+                onClick={() => void toggleFavorite()}
+                aria-label={
+                  isFavorite
+                    ? `Remove ${currentTrack.title} from favorites`
+                    : `Save ${currentTrack.title} to favorites`
+                }
+              >
+                <Icon
+                  name="heart"
+                  size={18}
+                  fill={isFavorite ? "currentColor" : "none"}
+                />
+              </button>
+            </div>
             <p>{currentTrack.artist}</p>
           </div>
           <span>{currentTrack.genre}</span>

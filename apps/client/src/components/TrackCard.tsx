@@ -1,4 +1,5 @@
 import type { RecommendationItem } from "@resonara/contracts";
+import { useFavorite } from "../features/favorites/useFavorite";
 import { Icon } from "./Icon";
 
 type TrackCardProps = {
@@ -8,6 +9,7 @@ type TrackCardProps = {
 
 export function TrackCard({ item, onPlay }: TrackCardProps) {
   const { track } = item;
+  const { isFavorite, toggleFavorite } = useFavorite(track);
 
   return (
     <article className="track-card">
@@ -18,6 +20,22 @@ export function TrackCard({ item, onPlay }: TrackCardProps) {
           {track.artist} · {track.genre} · {track.energyLabel}
         </p>
       </div>
+      <button
+        className={`favorite-button track-card__favorite ${isFavorite ? "favorite-button--active" : ""}`}
+        type="button"
+        onClick={() => void toggleFavorite()}
+        aria-label={
+          isFavorite
+            ? `Remove ${track.title} from favorites`
+            : `Save ${track.title} to favorites`
+        }
+      >
+        <Icon
+          name="heart"
+          size={16}
+          fill={isFavorite ? "currentColor" : "none"}
+        />
+      </button>
       <button
         className="track-card__play"
         type="button"
