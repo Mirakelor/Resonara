@@ -13,6 +13,7 @@ import { PlayerDock } from "./components/PlayerDock";
 import { TrackCard } from "./components/TrackCard";
 import { SettingsButton } from "./features/settings/SettingsButton";
 import { SettingsPanel } from "./features/settings/SettingsPanel";
+import { useListeningContext } from "./features/context/useListeningContext";
 import { getSettings } from "./db/repositories/settings";
 import { resolveFreshPlaybackUrl } from "./recommendation/verifyPlayable";
 import { createNeteaseProvider } from "./services/netease/client";
@@ -56,6 +57,9 @@ export function App() {
   const [isPlaying, setIsPlaying] = useState(false);
   const [progress, setProgress] = useState(0);
   const [notice, setNotice] = useState("");
+  const { context, recommendationContext } = useListeningContext(
+    environmentMode,
+  );
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const pendingTimerRef = useRef<number | null>(null);
   const noticeTimerRef = useRef<number | null>(null);
@@ -284,10 +288,32 @@ export function App() {
                 <span>What music fits this moment?</span>
               </h1>
               <div className="now-context" aria-label="Current environment">
-                <span>14:30</span>
-                <span>28°C</span>
-                <span>75% humidity</span>
-                <span>Cloudy</span>
+                <span>
+                  {new Intl.DateTimeFormat("en", {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                    hour12: false,
+                  }).format(new Date(context.localTime))}
+                </span>
+                {context.weather ? (
+                  <>
+                    <span>{Math.round(context.weather.temperatureC)}°C</span>
+                    <span>
+                      {Math.round(context.weather.relativeHumidity)}% humidity
+                    </span>
+                    <span>
+                      {context.weather.condition
+                        .replaceAll("_", " ")
+                        .replace(/\b\w/g, (letter) => letter.toUpperCase())}
+                    </span>
+                  </>
+                ) : (
+                  <span>
+                    {environmentMode === "ignore_environment"
+                      ? "Environment ignored"
+                      : "Local time only"}
+                  </span>
+                )}
               </div>
             </div>
             <SettingsButton onClick={() => setSettingsOpen(true)} />
