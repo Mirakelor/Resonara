@@ -2,6 +2,8 @@
 
 Context-aware music recommendations built around the right music for the right moment.
 
+Web deployment target: [resonara.sonder.eu.org](https://resonara.sonder.eu.org)
+
 The web application now includes the complete local-first recommendation flow:
 real anonymous candidate retrieval, AI planning and reranking, daily Discover,
 persistent favorites, a local learning profile, synchronized lyrics, and

@@ -1,0 +1,11 @@
+.git
+.env
+.env.*
+!.env.example
+Reference
+coverage
+dist
+**/dist
+playwright-report
+test-results
+**/*.test.*
